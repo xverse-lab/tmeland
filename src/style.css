@@ -1,0 +1,283 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+[v-cloak] {
+  display: none;
+}
+  /* #app {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+  } */
+  body,
+  html {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    position: relative;
+  }
+  .stream {
+    width: 100%;
+    height: 100%;
+  }
+  #bornPic {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    top: 0;
+    left: 0;
+    object-fit:cover;
+  }
+
+
+.footer {
+  height: 60px;
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  background: #fff;
+  opacity: 0.8;
+  width: 100%;
+  border-top: 1px solid #777a74;
+}
+
+.footer .back_default_view,
+.footer .toggle_avatar_display,
+.footer .send_gift{
+  display: flex;
+  flex: 1;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer .back_default_view,
+.footer .toggle_avatar_display {
+  border-right: 1px solid #777a74;
+}
+
+
+
+.gifts_list {
+  position: fixed;
+  bottom: 60px;
+  background: #fff;
+  opacity: 0.8;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.gifts_list .menu {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.gifts_list .menu .menu_item {
+  padding: 0 6px;
+}
+
+.gifts_list .detail {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.gifts_list .detail img {
+  width: 100%;
+}
+
+.gifts_list .detail button {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 10px;
+}
+
+/* #guitar{
+    display: none;
+} */
+
+#share {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+
+.leave-btn {
+  position: absolute;
+  top: 60px;
+  left: 20px;
+}
+
+
+.roomd-id {
+  position: fixed;
+  opacity: 0.5;
+  top: 10px;
+  color: white;
+}
+
+.user-id {
+  top: 30px;
+}
+
+
+.control-panel {
+  position: fixed;
+  bottom: 20px;
+  display: flex;
+}
+
+
+.control-panel button {
+  width: 70px;
+  margin: 0 10px;
+  height: 40px;
+}
+
+.minimap {
+  position: fixed;
+  bottom: 0px;
+  z-index: 1;
+  width: 100%;
+  background: #fff;
+  padding: 10px 0;
+}
+
+.minimap .close-button {
+  position: absolute;
+  right: 10px;
+  top: 0px;
+}
+
+.area_list {
+  display: flex;
+}
+
+.area_list .active-flag {
+  font-size: 12px;
+  color: burlywood;
+}
+.minimap button {
+  margin-top: 10px;
+}
+
+.area_list .area_list-item {
+  height: 60px;
+  background-color: #53574f;
+  color: #fff;
+  margin: 2px;
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.animation_list {
+  position: fixed;
+  bottom: 100px;
+  opacity: 0.8;
+  background: #fff;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.animation_list-swiper {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: auto;
+}
+
+.animation_list-item {
+  padding: 0 6px;
+  border-right: 1px solid #ccc;
+  margin-right: 10px;
+}
+
+
+.gift-modal {
+  position: fixed;
+  width: 300px;
+  margin: 0 auto;
+  background: white;
+  top: 100px;
+  transform: translateX(-50%);
+  left: 50%;
+}
+
+
+.gift-modal .gift-image img {
+  width: 100%;
+}
+
+.back_to_default{
+  position: absolute;
+  top: 40%;
+  background: #fff;
+  padding: 4px;
+  border-radius: 2px;
+  display: none;
+  font-size: 14px;
+}
+.back_to_default.left{
+  left: 0;
+  display: block;
+}
+.back_to_default.right {
+  right: 0;
+  display: block;
+}
+.camera_following{
+  position: absolute;
+  top: 20%;
+  background: #fff;
+  padding: 4px;
+  border-radius: 2px;
+  font-size: 14px;
+}
+#loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  z-index: 9999;
+  font-weight: 500;
+  font-size: 24px;
+  color: #ffffff;
+  flex-direction: column;
+  background: rgba(51, 51, 51, 0.8);
+}
+
+.loading img {
+  width: 240px;
+  height: 240px;
+  margin-bottom: 40px;
+  display: inline-block;
+}
+
+.wx-button {
+  position: absolute;
+  top: 50%;
+  left:  50%;
+  transform: translate(-50%, -50%);
+}
