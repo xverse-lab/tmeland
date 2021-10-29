@@ -1,7 +1,7 @@
 import Vue from 'vue'
-import { Xverse, XverseRoom } from '../../../src/index'
+import { Xverse, XverseRoom } from '@xverse/tmeland'
 
-let room: XverseRoom
+let room: any
 
 new Vue({
   el: '#app',
@@ -29,9 +29,7 @@ new Vue({
       // TODO: 这里因为元象素材会经常变更，所以先手动传入
       const skinDataVersion = urlParam.get('skinDataVersion') || '1004700001'
 
-      const xverse = new Xverse({
-        debug: true,
-      })
+      const xverse = new Xverse()
 
       const token = await this.getToken(appId as string, userId)
       if (!token) {
