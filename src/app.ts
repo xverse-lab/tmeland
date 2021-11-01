@@ -142,6 +142,9 @@ new Vue({
       }
     },
 
+    /**
+     * 播放 Avatar 动画
+     */
     playAnimation(animationName: string) {
       if (!room.userAvatar) return
       if (room.userAvatar.isMoving) {
@@ -157,5 +160,3 @@ new Vue({
     },
   },
 })
-
-window.app = app
