@@ -8,10 +8,9 @@ new Vue({
   data() {
     return {
       userId: Math.random().toString(16).slice(2),
-      /**
-       * 是否进入拍照模式
-       */
-      isInPhotoBooth: false,
+      isInPhotoBooth: false, // 是否进入拍照模式
+      showAnimation: false, // 展示动画面板
+      animations: [] as string[],
       currentShot: '',
     }
   },
@@ -105,6 +104,11 @@ new Vue({
       })
     },
 
+    toggleShowAnimation() {
+      this.showAnimation = !this.showAnimation
+      this.animations = room.userAvatar ? room.userAvatar.animations : []
+    },
+
     /**
      * 进入/退出拍照
      */
@@ -137,5 +141,21 @@ new Vue({
         console.error('拍照失败' + error)
       }
     },
+
+    playAnimation(animationName: string) {
+      if (!room.userAvatar) return
+      if (room.userAvatar.isMoving) {
+        console.error('主播正在行进，不允许播放动画')
+        return
+      }
+      let loop = false
+      // PHOTO 开头的用于摆 pose
+      if (animationName.startsWith('PHOTO')) {
+        loop = true
+      }
+      room.userAvatar.playAnimation({ animationName, loop, extra: JSON.stringify({ messageId: '中文ID' }) })
+    },
   },
 })
+
+window.app = app

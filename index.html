@@ -15,8 +15,14 @@
 
 <body>
   <canvas id="canvas" class="stream unselect"></canvas>
-  <div id="app" >
+  <div id="app">
+    <div class="animation_list" v-if="animations.length && showAnimation">
+      <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
+    </div>
     <div class="function_control_btns" v-cloak>
+      <template v-if="!isInPhotoBooth">
+        <button @click="toggleShowAnimation">互动</button>
+      </template>
       <button @click="togglePhotoBooth">{{!isInPhotoBooth?"进入拍照模式":"退出拍照模式"}}</button>
       <template v-if="isInPhotoBooth">
         <button @click="setShots('long')" :class="currentShot==='long'?'active':''">远景</button>
