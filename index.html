@@ -15,7 +15,20 @@
 
 <body>
   <canvas id="canvas" class="stream unselect"></canvas>
-  <div id="app"></div>
+  <div id="app" >
+    <div class="function_control_btns" v-cloak>
+      <button @click="togglePhotoBooth">{{!isInPhotoBooth?"进入拍照模式":"退出拍照模式"}}</button>
+      <template v-if="isInPhotoBooth">
+        <button @click="setShots('long')" :class="currentShot==='long'?'active':''">远景</button>
+        <button @click="setShots('medium')" :class="currentShot==='medium'?'active':''">中景</button>
+        <button @click="setShots('close')" :class="currentShot==='close'?'active':''">近景</button>
+        <button @click="takePhoto">拍照</button>
+        <!-- <template v-for="item in animations">
+          <button class="animation_list-item" v-if="item.startsWith('PHOTO')" @click="playAnimation(item)">{{ item }}</button>
+        </template> -->
+      </template>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
   <script type="module" src="./src/app.ts"></script>

@@ -1,13 +1,18 @@
 import Vue from 'vue'
-import { Xverse, XverseRoom } from '@xverse/tmeland'
+import { IPhotoShots, Xverse, XverseRoom } from '@xverse/tmeland'
 
-let room: any
+let room: XverseRoom
 
 new Vue({
   el: '#app',
   data() {
     return {
       userId: Math.random().toString(16).slice(2),
+      /**
+       * 是否进入拍照模式
+       */
+      isInPhotoBooth: false,
+      currentShot: '',
     }
   },
   mounted() {
@@ -29,7 +34,9 @@ new Vue({
       // TODO: 这里因为元象素材会经常变更，所以先手动传入
       const skinDataVersion = urlParam.get('skinDataVersion') || '1004700001'
 
-      const xverse = new Xverse()
+      const xverse = new Xverse({
+        debug: true,
+      })
 
       const token = await this.getToken(appId as string, userId)
       if (!token) {
@@ -52,7 +59,7 @@ new Vue({
         console.error(error)
         alert(error)
       }
-
+      window.room = room
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
       this.setSkytvVideo()
@@ -87,12 +94,48 @@ new Vue({
       }
     },
 
+    /**
+     * 设置球幕视频
+     */
     setSkytvVideo() {
       room.skytv.setUrl({
         url: 'https://static.xverse.cn/music-festival/4ke_1.5m_crop.mp4',
-        bLoop: true,
-        bMuted: true,
+        loop: true,
+        muted: true,
       })
+    },
+
+    /**
+     * 进入/退出拍照
+     */
+    togglePhotoBooth() {
+      if (!this.isInPhotoBooth) {
+        room.photoBooth.start().then((shot) => {
+          this.isInPhotoBooth = true
+          this.currentShot = shot
+        })
+      } else {
+        room.photoBooth.stop().then(() => {
+          this.isInPhotoBooth = false
+        })
+      }
+    },
+
+    // 切换近远景
+    async setShots(shot: IPhotoShots) {
+      room.photoBooth.setShots(shot).then((shot) => {
+        this.currentShot = shot
+      })
+    },
+
+    // 拍照
+    async takePhoto() {
+      try {
+        const data = await room.photoBooth.takePhoto()
+        console.log('拍照成功' + data)
+      } catch (error) {
+        console.error('拍照失败' + error)
+      }
     },
   },
 })

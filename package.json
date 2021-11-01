@@ -11,7 +11,7 @@
     "vite": "^2.6.4"
   },
   "dependencies": {
-    "@xverse/tmeland": "^1.0.0",
+    "@xverse/tmeland": "^1.0.2",
     "vue": "^2.6.14"
   }
 }
