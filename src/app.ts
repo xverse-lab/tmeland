@@ -1,17 +1,23 @@
 import Vue from 'vue'
-import { IPhotoShots, Xverse, XverseRoom } from '@xverse/tmeland'
-
+import { IPhotoShots, Xverse, XverseRoom, MotionType, Person } from '@xverse/tmeland'
+import Minimap from './components/minimap/minimap.vue'
 let room: XverseRoom
 
 new Vue({
   el: '#app',
+  components: {
+    Minimap,
+  },
   data() {
     return {
       userId: Math.random().toString(16).slice(2),
       isInPhotoBooth: false, // 是否进入拍照模式
       showAnimation: false, // 展示动画面板
-      animations: [] as string[],
-      currentShot: '',
+      animations: [] as string[], // 可播放的动画
+      currentShot: '', // 当前拍照模式
+      showMinimap: false, // 是否展示小地图
+      motionType: MotionType.Walk, // 移动方式
+      person: Person.Third,
     }
   },
   mounted() {
@@ -26,6 +32,7 @@ new Vue({
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
       const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
       const skinId = (urlParam.get('skinId') || import.meta.env.VITE_SKINID) as string
+
       const wsServerUrl = urlParam.get('ws')
         ? decodeURIComponent(urlParam.get('ws')!)
         : 'wss://uat-eks.xverse.cn/xverse/ws' // TODO: 测试联调服务，后面上线可以不传
@@ -34,7 +41,7 @@ new Vue({
       const skinDataVersion = urlParam.get('skinDataVersion') || '1004700001'
 
       const xverse = new Xverse({
-        debug: true,
+        debug: false,
       })
 
       const token = await this.getToken(appId as string, userId)
@@ -53,15 +60,17 @@ new Vue({
           appId: appId,
           token: token,
           skinDataVersion,
+          nickname: 'emoji测试',
         })
       } catch (error) {
         console.error(error)
         alert(error)
       }
-      window.room = room
+      ;(window as any).room = room
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
       this.setSkytvVideo()
+      this.setMV()
     },
 
     /**
@@ -78,7 +87,6 @@ new Vue({
           }),
           headers: {
             'Content-Type': 'application/json',
-            // 'Content-Type': 'application/x-www-form-urlencoded',
           },
           method: 'POST',
         })
@@ -102,6 +110,22 @@ new Vue({
         loop: true,
         muted: true,
       })
+    },
+
+    setMV() {
+      room.tvs[0]
+        .setUrl({
+          url: 'https://static.xverse.cn/music-festival/k_music_01.mp4',
+          loop: true,
+          muted: false,
+        })
+        .then(() => {
+          room.tvs.forEach((tv, index) => {
+            if (index > 0) {
+              tv.mirrorFrom(room.tvs[0])
+            }
+          })
+        })
     },
 
     toggleShowAnimation() {
@@ -143,7 +167,9 @@ new Vue({
     },
 
     /**
-     * 播放 Avatar 动画
+     * Avatar 播放动作
+     * @param animationName
+     * @returns
      */
     playAnimation(animationName: string) {
       if (!room.userAvatar) return
@@ -157,6 +183,45 @@ new Vue({
         loop = true
       }
       room.userAvatar.playAnimation({ animationName, loop, extra: JSON.stringify({ messageId: '中文ID' }) })
+    },
+
+    /**
+     * 小地图选中处理
+     * @param item
+     */
+    handleMinimapSelect(item: { id: string }) {
+      console.log(item)
+    },
+
+    /**
+     * 切换走跑模式
+     * @param mode
+     * @returns
+     */
+    toggleMotionType(mode: MotionType) {
+      if (this.motionType === mode) return
+      if (!room.userAvatar) return
+      if (room.userAvatar.isMoving || room.userAvatar.isRotating) {
+        return
+      }
+      room.userAvatar
+        .setMotionType({ type: mode })
+        .then(() => {
+          this.motionType = mode
+        })
+        .catch(() => {
+          console.error(`切换${mode === MotionType.Run ? '走' : '跑'}模式失败`)
+        })
+    },
+
+    /**
+     * 切换一三人称
+     * @param person
+     */
+    setPerson(person: Person) {
+      room.camera.setPerson(person).then(() => {
+        this.person = person
+      })
     },
   },
 })
