@@ -42,7 +42,7 @@ new Vue({
       const skinDataVersion = urlParam.get('skinDataVersion') || '1005000002'
 
       const xverse = new Xverse({
-        debug: true,
+        debug: false,
       })
 
       const token = await this.getToken(appId as string, userId)
@@ -74,6 +74,7 @@ new Vue({
       room.disableAutoTurn = true
       this.setSkytvVideo()
       this.setMV()
+      this.bindClickEvent()
     },
 
     bindUserAvatarEvent() {
@@ -85,6 +86,15 @@ new Vue({
         room.userAvatar.on('stopMoving', ({ target }) => {
           this.currentArea = target.currentArea
         })
+      })
+    },
+
+    bindClickEvent() {
+      room.on('click', (event) => {
+        if (!event.target) return
+        if (event.target.name === 'PhotoBooth') {
+          this.togglePhotoBooth(event.target.id)
+        }
       })
     },
 
@@ -154,9 +164,9 @@ new Vue({
     /**
      * 进入/退出拍照
      */
-    togglePhotoBooth() {
+    togglePhotoBooth(id: string) {
       if (!this.isInPhotoBooth) {
-        room.photoBooth.start().then((shot) => {
+        room.photoBooth.start(id).then((shot) => {
           this.isInPhotoBooth = true
           this.currentShot = shot
         })
@@ -244,6 +254,10 @@ new Vue({
       room.camera.setPerson(person).then(() => {
         this.person = person
       })
+    },
+
+    toggleStats() {
+      room.stats.isShow ? room.stats.hide() : room.stats.show()
     },
   },
 })

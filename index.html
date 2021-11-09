@@ -16,6 +16,9 @@
 <body>
   <canvas id="canvas" class="stream unselect"></canvas>
   <div id="app">
+    <div class="debug_control_btns">
+      <button @click="toggleStats" class="leave-btn">Toggle Stats</button>
+    </div>
     <div class="animation_list" v-if="animations.length && showAnimation">
       <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
     </div>
@@ -27,7 +30,7 @@
         <button @click="toggleMotionType(motionType == 0 ? 1 : 0)">移动：{{motionType == 0 ? '走' : '跑'}}</button>
         <button @click="setPerson(person == 1 ? 0 : 1)">第{{person == 1 ? '一' : '三'}}人称</button>
       </template>
-      <button @click="togglePhotoBooth">{{!isInPhotoBooth?"进入拍照模式":"退出拍照模式"}}</button>
+      <button @click="togglePhotoBooth" v-if="isInPhotoBooth">{{"退出拍照模式"}}</button>
       <template v-if="isInPhotoBooth">
         <button @click="setShots('long')" :class="currentShot==='long'?'active':''">远景</button>
         <button @click="setShots('medium')" :class="currentShot==='medium'?'active':''">中景</button>
