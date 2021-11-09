@@ -18,6 +18,7 @@ new Vue({
       showMinimap: false, // 是否展示小地图
       motionType: MotionType.Walk, // 移动方式
       person: Person.Third,
+      currentArea: '', // 音乐岛上当前区域
     }
   },
   mounted() {
@@ -38,10 +39,10 @@ new Vue({
         : 'wss://uat-eks.xverse.cn/xverse/ws' // TODO: 测试联调服务，后面上线可以不传
 
       // TODO: 这里因为元象素材会经常变更，所以先手动传入
-      const skinDataVersion = urlParam.get('skinDataVersion') || '1004700001'
+      const skinDataVersion = urlParam.get('skinDataVersion') || '1005000002'
 
       const xverse = new Xverse({
-        debug: false,
+        debug: true,
       })
 
       const token = await this.getToken(appId as string, userId)
@@ -61,7 +62,9 @@ new Vue({
           token: token,
           skinDataVersion,
           nickname: 'emoji测试',
+          firends: ['user1'],
         })
+        this.bindUserAvatarEvent()
       } catch (error) {
         console.error(error)
         alert(error)
@@ -71,6 +74,18 @@ new Vue({
       room.disableAutoTurn = true
       this.setSkytvVideo()
       this.setMV()
+    },
+
+    bindUserAvatarEvent() {
+      room.on('userAvatarLoaded', () => {
+        if (!room.userAvatar) return
+        console.log('Avatar 加载完毕')
+        // currentArea
+        this.currentArea = room.userAvatar.currentArea
+        room.userAvatar.on('stopMoving', ({ target }) => {
+          this.currentArea = target.currentArea
+        })
+      })
     },
 
     /**
@@ -112,6 +127,9 @@ new Vue({
       })
     },
 
+    /**
+     * 设置广场的 MV
+     */
     setMV() {
       room.tvs[0]
         .setUrl({
@@ -190,7 +208,12 @@ new Vue({
      * @param item
      */
     handleMinimapSelect(item: { id: string }) {
-      console.log(item)
+      let id: string
+      if ((id = item.id)) {
+        this.toggleMotionType(MotionType.Run).then(() => {
+          room.userAvatar?.moveToArea(id)
+        })
+      }
     },
 
     /**
@@ -199,12 +222,11 @@ new Vue({
      * @returns
      */
     toggleMotionType(mode: MotionType) {
-      if (this.motionType === mode) return
-      if (!room.userAvatar) return
-      if (room.userAvatar.isMoving || room.userAvatar.isRotating) {
-        return
+      if (this.motionType === mode) return Promise.resolve()
+      if (!room.userAvatar || room.userAvatar.isMoving || room.userAvatar.isRotating) {
+        return Promise.reject()
       }
-      room.userAvatar
+      return room.userAvatar
         .setMotionType({ type: mode })
         .then(() => {
           this.motionType = mode

@@ -19,7 +19,7 @@
     <div class="animation_list" v-if="animations.length && showAnimation">
       <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
     </div>
-    <minimap v-show="showMinimap" @select="handleMinimapSelect" @close="showMinimap = !showMinimap"></minimap>
+    <minimap v-show="showMinimap" :current-area="currentArea" @select="handleMinimapSelect" @close="showMinimap = !showMinimap"></minimap>
     <div class="function_control_btns" v-cloak>
       <template v-if="!isInPhotoBooth">
         <button @click="toggleShowAnimation">互动</button>

@@ -2,8 +2,9 @@
   <div class="minimaps">
     <div class="close" @click="handleClose"></div>
     <div class="minimaps-map">
-      <div v-for="item in minimaps" :key="item.id" class="icons" :style="{left: px2rem(item.position.x), top: px2rem(item.position.y) }" @click="handleClick(item)">
+      <div v-for="item in minimaps" :key="item.id"  :class="['icons', currentArea === item.id && 'active']" :style="{left: px2rem(item.position.x), top: px2rem(item.position.y) }" @click="handleClick(item)">
         <img :src="item.image" >
+        <span class="minimap-name">{{item.name}}</span>
       </div>
     </div>
   </div>
@@ -16,17 +17,22 @@ import disco from './images/disco.png'
 import hotAirBalloonBase from './images/hot-air-balloon-base.png'
 import liveHall from './images/live-hall.png'
 import sculptureGallery from './images/sculpture-gallery.png'
-import watchtower from './images/watchtower.png'
+import watchTower from './images/watchtower.png'
+import gameCenter from './images/game-center.png'
+import manmadeGarden from './images/manmade-garden.png'
+import musicMuseum from './images/music-museum.png'
 
 const minimaps = [{
   id: 'airshipBase',
+  name: '飞艇基地',
   position: {
-    x: '230',
-    y: '29'
+    x: '125',
+    y: '90'
   },
   image: airshipBase
 },{
   id: 'birthSquare',
+  name: '出生广场',
   position: {
     x: '230',
     y: '402'
@@ -34,6 +40,7 @@ const minimaps = [{
   image: birthSquare
 },{
   id: 'disco',
+  name: '迪厅',
   position: {
     x: '228',
     y: '184'
@@ -41,13 +48,15 @@ const minimaps = [{
   image: disco
 },{
   id: 'hotAirBalloonBase',
-  position: {
-    x: '125',
-    y: '90'
+  name: '热气球基地',
+    position: {
+    x: '230',
+    y: '29'
   },
   image: hotAirBalloonBase
 },{
   id: 'liveHall',
+  name: '直播厅',
   position: {
     x: '316',
     y: '328'
@@ -55,22 +64,52 @@ const minimaps = [{
   image: liveHall
 },{
   id: 'sculptureGallery',
+  name: '雕塑园',
   position: {
     x: '125',
     y: '328'
   },
   image: sculptureGallery
 },{
-  id: 'watchtower',
+  id: 'watchTower',
+  name: '瞭望塔',
   position: {
     x: '348',
     y: '61'
   },
-  image: watchtower
-},]
+  image: watchTower
+},{
+  id: 'gameCenter',
+  name: '游戏中心',
+  position: {
+    x: '394',
+    y: '225'
+  },
+  image: gameCenter
+},{
+  id: 'manmadeGarden',
+  name: '人造景观园',
+  position: {
+    x: '46',
+    y: '144'
+  },
+  image: manmadeGarden
+},{
+  id: 'musicMuseum',
+  name: '音乐博物馆',
+  position: {
+    x: '46',
+    y: '245'
+  },
+  image: musicMuseum
+}]
 
 
 export default {
+  name: 'minimap',
+  props: {
+    currentArea: String
+  },
   data() {
     return {
       minimaps
@@ -122,6 +161,10 @@ export default {
   position: absolute;
 }
 
+.minimaps .icons.active {
+  background-color: #FFEA95;
+}
+
 .minimaps .icons img{
   width: 100%;
   height: 100%;
@@ -137,5 +180,18 @@ export default {
   background-repeat: no-repeat;
   width: 3.88rem;
   height: 1.4rem;
+}
+
+.minimap-name {
+  font-size: 0.5rem;
+  font-weight: 500;
+  color: #FFFFFF;
+  line-height: 0.7rem;
+  text-shadow: 0px 0px 0px rgba(0, 0, 0, 0.5);
+  position: absolute;
+  bottom: 0.03rem;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  width: 2.5rem;
 }
 </style>
