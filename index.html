@@ -16,15 +16,13 @@
 <body>
   <canvas id="canvas" class="stream unselect"></canvas>
   <div id="app">
-    <div class="debug_control_btns">
-      <button @click="toggleStats" class="leave-btn">Toggle Stats</button>
-    </div>
     <div class="animation_list" v-if="animations.length && showAnimation">
       <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
     </div>
     <minimap v-show="showMinimap" :current-area="currentArea" @select="handleMinimapSelect" @close="showMinimap = !showMinimap"></minimap>
     <div class="function_control_btns" v-cloak>
       <template v-if="!isInPhotoBooth">
+        <button @click="startPlayRain">开启红包雨</button>
         <button @click="toggleDisco">{{isInDisco?'离开迪厅':'前往迪厅'}}</button>
         <button @click="toggleShowAnimation">互动</button>
         <button @click="showMinimap = !showMinimap">{{showMinimap ? '关闭' : '打开'}}小地图</button>

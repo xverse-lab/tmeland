@@ -98,7 +98,6 @@ new Vue({
         } else if (event.target && event.target.name === 'ConfessionsWall') {
           console.warn('告白墙输入入口')
         } else {
-          // 点击事件还没有，所以可以先手动调用room.userAvatar?.showButtons() 展示按钮
           // 点击空白处关闭 Avatar 按钮的逻辑
           room.userAvatar?.hideButtons()
         }
@@ -263,6 +262,9 @@ new Vue({
       })
     },
 
+    /**
+     * 进出迪厅
+     */
     toggleDisco() {
       if (this.isInDisco) {
         room.disco.exit().then(() => {
@@ -276,6 +278,17 @@ new Vue({
           room.skytv.pause()
         })
       }
+    },
+    /**
+     * 开启红包雨
+     */
+    startPlayRain() {
+      room.effectManager.rain.play({
+        duration: 10000,
+        onEnd(count) {
+          console.warn('点中了' + count + '个红包雨')
+        },
+      })
     },
   },
 })
