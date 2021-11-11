@@ -19,6 +19,7 @@ new Vue({
       motionType: MotionType.Walk, // 移动方式
       person: Person.Third,
       currentArea: '', // 音乐岛上当前区域
+      isInDisco: false, // 是否在迪厅中
     }
   },
   mounted() {
@@ -91,9 +92,15 @@ new Vue({
 
     bindClickEvent() {
       room.on('click', (event) => {
-        if (!event.target) return
-        if (event.target.name === 'PhotoBooth') {
-          this.togglePhotoBooth(event.target.id)
+        // TODO: 后续提供枚举
+        if (event.target && event.target.name === 'PhotoBooth') {
+          room.photoBooth.start(event.target.id)
+        } else if (event.target && event.target.name === 'ConfessionsWall') {
+          console.warn('告白墙输入入口')
+        } else {
+          // 点击事件还没有，所以可以先手动调用room.userAvatar?.showButtons() 展示按钮
+          // 点击空白处关闭 Avatar 按钮的逻辑
+          room.userAvatar?.hideButtons()
         }
       })
     },
@@ -256,8 +263,19 @@ new Vue({
       })
     },
 
-    toggleStats() {
-      room.stats.isShow ? room.stats.hide() : room.stats.show()
+    toggleDisco() {
+      if (this.isInDisco) {
+        room.disco.exit().then(() => {
+          this.isInDisco = !this.isInDisco
+          room.skytv.play()
+        })
+      } else {
+        room.disco.access().then(() => {
+          room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
+          this.isInDisco = !this.isInDisco
+          room.skytv.pause()
+        })
+      }
     },
   },
 })
