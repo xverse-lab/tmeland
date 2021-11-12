@@ -34,13 +34,6 @@ body {
 [v-cloak] {
   display: none;
 }
-  /* #app {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-  } */
   body,
   html {
     padding: 0;
@@ -118,7 +111,46 @@ body {
 .footer .play_cg {
   border-right: 1px solid #777a74;
 }
+.dress_list {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  opacity: 0.8;
+  background: #fff;
+  height: 100vh;
+  overflow: auto;
+  width: 220px;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+}
 
+.dress_list-swiper {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: auto;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.dress_list-item .active{
+  color:#015ce3;
+}
+.dress_list-item.active{
+  color:#015ce3;
+}
+.dress_list-item {
+  padding: 0 6px;
+  border-right: 1px solid #ccc;
+  margin-right: 10px;
+}
+.dress_list-item >span {
+  font-weight: 600;
+  background-color: #4ce6f1;
+  width: 100%;
+  display: inline-block;
+}
 
 
 .gifts_list {
@@ -175,7 +207,7 @@ body {
   left: 10px;
   width: 110px;
   flex-wrap: nowrap;
-  height: calc(100% - 160px);
+  max-height: calc(100% - 160px);
   overflow: auto;
 }
 .debug_control_btns > *,.function_control_btns >*,.screen_shot_btns>*, .animation_list >*{

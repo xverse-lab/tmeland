@@ -24,6 +24,8 @@
       <template v-if="!isInPhotoBooth">
         <button @click="startPlayRain">开启红包雨</button>
         <button @click="toggleDisco">{{isInDisco?'离开迪厅':'前往迪厅'}}</button>
+        <button @click="toggleLiveHall">{{isInLiveHall?'离开直播厅':'前往直播厅'}}</button>
+        <button @click="showComponentsPanel = true">换装</button>
         <button @click="toggleShowAnimation">互动</button>
         <button @click="showMinimap = !showMinimap">{{showMinimap ? '关闭' : '打开'}}小地图</button>
         <button @click="toggleMotionType(motionType == 0 ? 1 : 0)">移动：{{motionType == 0 ? '走' : '跑'}}</button>
@@ -35,11 +37,12 @@
         <button @click="setShots('medium')" :class="currentShot==='medium'?'active':''">中景</button>
         <button @click="setShots('close')" :class="currentShot==='close'?'active':''">近景</button>
         <button @click="takePhoto">拍照</button>
-        <!-- <template v-for="item in animations">
-          <button class="animation_list-item" v-if="item.startsWith('PHOTO')" @click="playAnimation(item)">{{ item }}</button>
-        </template> -->
       </template>
     </div>
+
+    <components-panel :components="components" :current-components="avatarComponents" v-if="showComponentsPanel" @close="showComponentsPanel = false">
+    </components-panel>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>

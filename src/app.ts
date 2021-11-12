@@ -1,15 +1,18 @@
 import Vue from 'vue'
-import { IPhotoShots, Xverse, XverseRoom, MotionType, Person } from '@xverse/tmeland'
+import { IPhotoShots, Xverse, XverseRoom, MotionType, Person, ILiveInfo } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
+import ComponentsPanel from './components/components-panel/components-panel.vue'
 let room: XverseRoom
 
 new Vue({
   el: '#app',
   components: {
     Minimap,
+    ComponentsPanel,
   },
   data() {
     return {
+      avatarId: '', // 用户的 avatar 类型ID
       userId: Math.random().toString(16).slice(2),
       isInPhotoBooth: false, // 是否进入拍照模式
       showAnimation: false, // 展示动画面板
@@ -20,6 +23,10 @@ new Vue({
       person: Person.Third,
       currentArea: '', // 音乐岛上当前区域
       isInDisco: false, // 是否在迪厅中
+      isInLiveHall: false, // 是否在直播厅中
+      showComponentsPanel: false, // 展示换装面板
+      components: [] as any[], // Avatar 的组件列表
+      avatarComponents: [] as any[],
     }
   },
   mounted() {
@@ -34,7 +41,7 @@ new Vue({
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
       const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
       const skinId = (urlParam.get('skinId') || import.meta.env.VITE_SKINID) as string
-
+      this.avatarId = avatarId
       const wsServerUrl = urlParam.get('ws')
         ? decodeURIComponent(urlParam.get('ws')!)
         : 'wss://uat-eks.xverse.cn/xverse/ws' // TODO: 测试联调服务，后面上线可以不传
@@ -43,7 +50,7 @@ new Vue({
       const skinDataVersion = urlParam.get('skinDataVersion') || '1005000002'
 
       const xverse = new Xverse({
-        debug: false,
+        debug: true,
       })
 
       const token = await this.getToken(appId as string, userId)
@@ -66,16 +73,27 @@ new Vue({
           firends: ['user1'],
         })
         this.bindUserAvatarEvent()
+        ;(window as any).room = room
       } catch (error) {
         console.error(error)
         alert(error)
       }
-      ;(window as any).room = room
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
       this.setSkytvVideo()
       this.setMV()
       this.bindClickEvent()
+      this.getAvatarComponents()
+    },
+
+    /**
+     * 获取用户这个 Avatar 类型的所有
+     */
+    async getAvatarComponents() {
+      // 这里只是演示，从非公开接口拿到了所有 Avatar 组件，业务方还是从业务后台读取这个列表
+      const avatarTypeList = await room.modelManager.getAvatarModelList()
+      const avatarInfo = avatarTypeList.find((avatarType) => avatarType.id === this.avatarId)
+      this.components = avatarInfo ? avatarInfo.components : []
     },
 
     bindUserAvatarEvent() {
@@ -84,6 +102,7 @@ new Vue({
         console.log('Avatar 加载完毕')
         // currentArea
         this.currentArea = room.userAvatar.currentArea
+        this.avatarComponents = room.userAvatar.avatarComponents
         room.userAvatar.on('stopMoving', ({ target }) => {
           this.currentArea = target.currentArea
         })
@@ -275,6 +294,33 @@ new Vue({
         room.disco.access().then(() => {
           room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
           this.isInDisco = !this.isInDisco
+          room.skytv.pause()
+        })
+      }
+    },
+
+    /**
+     * 进出迪厅
+     */
+    toggleLiveHall() {
+      if (this.isInLiveHall) {
+        room.liveHall.exit().then(() => {
+          this.isInLiveHall = !this.isInLiveHall
+          room.skytv.play()
+        })
+      } else {
+        room.liveHall.access().then(() => {
+          const liveInfos: ILiveInfo[] = new Array(4).fill(null).map((item, index) => {
+            return {
+              id: 'liveBoard' + index,
+              hostName: 'Test',
+              desc: '正在演唱《X》',
+              thumbnailUrl: 'https://static.xverse.cn/music-festival/textures/bubble01.png',
+              avatarId: 'KGe_Boy',
+            }
+          })
+          room.liveHall.setLiveInfos(liveInfos)
+          this.isInLiveHall = !this.isInLiveHall
           room.skytv.pause()
         })
       }
