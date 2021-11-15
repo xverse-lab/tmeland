@@ -1,5 +1,14 @@
 import Vue from 'vue'
-import { IPhotoShots, Xverse, XverseRoom, MotionType, Person, ILiveInfo } from '@xverse/tmeland'
+import {
+  IPhotoShots,
+  Xverse,
+  XverseRoom,
+  MotionType,
+  Person,
+  ILiveInfo,
+  Avatar,
+  ClickTargetName,
+} from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
 let room: XverseRoom
@@ -110,15 +119,30 @@ new Vue({
     },
 
     bindClickEvent() {
+      let showButtonsAvatar: Avatar | undefined
       room.on('click', (event) => {
-        // TODO: 后续提供枚举
-        if (event.target && event.target.name === 'PhotoBooth') {
-          room.photoBooth.start(event.target.id)
-        } else if (event.target && event.target.name === 'ConfessionsWall') {
+        if (event.target && event.target.name === ClickTargetName.PhotoBooth) {
+          this.togglePhotoBooth(event.target.id)
+        } else if (event.target && event.target.name === ClickTargetName.ConfessionsWall) {
           console.warn('告白墙输入入口')
+        } else if (event.target && event.target.name === ClickTargetName.Avatar) {
+          const id = event.target.id
+          // 排除自己
+          if (id !== this.userId) {
+            showButtonsAvatar = room.avatars.find((avatar) => avatar.userId === id)
+            showButtonsAvatar?.showButtons()
+          }
+        } else if (event.target && event.target.name === ClickTargetName.GiftPanel) {
+          if (showButtonsAvatar) {
+            room.userAvatar.sendGift(showButtonsAvatar, event.target.id)
+            showButtonsAvatar.hideButtons()
+          }
+        } else if (event.target && event.target.name === ClickTargetName.LiveEntrance) {
+          console.warn('进入直播间 ID:' + event.target.id)
         } else {
-          // 点击空白处关闭 Avatar 按钮的逻辑
-          room.userAvatar?.hideButtons()
+          room.avatars.forEach((avatar) => {
+            avatar.hideButtons()
+          })
         }
       })
     },
