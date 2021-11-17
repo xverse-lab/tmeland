@@ -30,6 +30,8 @@
         <button @click="showMinimap = !showMinimap">{{showMinimap ? '关闭' : '打开'}}小地图</button>
         <button @click="toggleMotionType(motionType == 0 ? 1 : 0)">移动：{{motionType == 0 ? '走' : '跑'}}</button>
         <button @click="setPerson(person == 1 ? 0 : 1)">第{{person == 1 ? '一' : '三'}}人称</button>
+        <button @click="toggleBox('left')">{{isInBox?"离开左包厢":"前往左包厢"}}</button>
+        <button @click="toggleBox('right')">{{isInBox?"离开右包厢":"前往右包厢"}}</button>
       </template>
       <button @click="togglePhotoBooth" v-if="isInPhotoBooth">{{"退出拍照模式"}}</button>
       <template v-if="isInPhotoBooth">

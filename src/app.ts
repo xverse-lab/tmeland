@@ -8,6 +8,7 @@ import {
   ILiveInfo,
   Avatar,
   ClickTargetName,
+  VehicleType,
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
@@ -36,6 +37,8 @@ new Vue({
       showComponentsPanel: false, // 展示换装面板
       components: [] as any[], // Avatar 的组件列表
       avatarComponents: [] as any[],
+      isInBox: false, // 是否在包厢中
+      isOnVehicle: false,
     }
   },
   mounted() {
@@ -45,7 +48,7 @@ new Vue({
     async initRoom() {
       const urlParam = new window.URLSearchParams(location.search)
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
-      const roomId = urlParam.get('roomId') || undefined
+      const roomId = urlParam.get('roomId') || 'f43e5e35-94e8-4645-a614-d68cfccfca26' // 多人同房的必填参数
       const userId = urlParam.get('userId') || this.userId
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
       const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
@@ -56,7 +59,7 @@ new Vue({
         : 'wss://uat-eks.xverse.cn/xverse/ws' // TODO: 测试联调服务，后面上线可以不传
 
       // TODO: 这里因为元象素材会经常变更，所以先手动传入
-      const skinDataVersion = urlParam.get('skinDataVersion') || '1005000002'
+      const skinDataVersion = urlParam.get('skinDataVersion') || '1005000055'
 
       const xverse = new Xverse({
         debug: true,
@@ -78,7 +81,7 @@ new Vue({
           appId: appId,
           token: token,
           skinDataVersion,
-          nickname: 'emoji测试',
+          nickname: userId,
           firends: ['user1'],
         })
         this.bindUserAvatarEvent()
@@ -139,6 +142,12 @@ new Vue({
           }
         } else if (event.target && event.target.name === ClickTargetName.LiveEntrance) {
           console.warn('进入直播间 ID:' + event.target.id)
+        } else if (event.target && event.target.name === ClickTargetName.AirshipEntrance) {
+          // 进入飞艇
+          this.toggleVehicle(VehicleType.Airship)
+        } else if (event.target && event.target.name === ClickTargetName.HotAirBalloonEntrance) {
+          // 进入热气球
+          this.toggleVehicle(VehicleType.HotAirBalloon)
         } else {
           room.avatars.forEach((avatar) => {
             avatar.hideButtons()
@@ -175,11 +184,29 @@ new Vue({
       }
     },
 
+    async toggleVehicle(vehicle: VehicleType) {
+      if (!this.isOnVehicle) {
+        try {
+          await room.vehicle.access(vehicle)
+        } catch (error) {
+          console.error(`上${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败`)
+        }
+        this.isOnVehicle = true
+      } else {
+        try {
+          await room.vehicle.exit()
+          this.isOnVehicle = false
+        } catch (error) {
+          console.error(`下${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败`)
+        }
+      }
+    },
+
     /**
      * 设置球幕视频
      */
     setSkytvVideo() {
-      room.skytv.setUrl({
+      room.skytv?.setUrl({
         url: 'https://static.xverse.cn/music-festival/4ke_1.5m_crop.mp4',
         loop: true,
         muted: true,
@@ -359,6 +386,22 @@ new Vue({
           console.warn('点中了' + count + '个红包雨')
         },
       })
+    },
+
+    /**
+     * 进出包厢
+     * @param direction
+     */
+    toggleBox(direction: 'left' | 'right' = 'left') {
+      if (!this.isInBox) {
+        room.box.access(direction).then(() => {
+          this.isInBox = true
+        })
+      } else {
+        room.box.exit().then(() => {
+          this.isInBox = false
+        })
+      }
     },
   },
 })
