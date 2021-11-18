@@ -38,7 +38,7 @@ new Vue({
       components: [] as any[], // Avatar 的组件列表
       avatarComponents: [] as any[],
       isInBox: false, // 是否在包厢中
-      isOnVehicle: false,
+      isOnVehicle: false, // 是否在载具上
     }
   },
   mounted() {
@@ -146,8 +146,12 @@ new Vue({
           // 进入飞艇
           this.toggleVehicle(VehicleType.Airship)
         } else if (event.target && event.target.name === ClickTargetName.HotAirBalloonEntrance) {
-          // 进入热气球
           this.toggleVehicle(VehicleType.HotAirBalloon)
+        } else if (event.target && event.target.name === ClickTargetName.DiscoEntrance) {
+          this.toggleDisco()
+        } else if (event.target && event.target.name === ClickTargetName.LiveHallEntrance) {
+          // this.toggle(VehicleType.HotAirBalloon)
+          this.toggleLiveHall()
         } else {
           room.avatars.forEach((avatar) => {
             avatar.hideButtons()
@@ -402,6 +406,16 @@ new Vue({
           this.isInBox = false
         })
       }
+    },
+
+    /**
+     * 换装模式
+     */
+    toggleComponentsPanel() {
+      this.showComponentsPanel = !this.showComponentsPanel
+      this.showComponentsPanel
+        ? room.userAvatar.startChangeComponentsMode()
+        : room.userAvatar.exitChangeComponentsMode()
     },
   },
 })
