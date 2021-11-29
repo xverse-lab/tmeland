@@ -46,6 +46,14 @@ new Vue({
   },
   methods: {
     async initRoom() {
+      const xverse = new Xverse({
+        debug: true,
+      })
+      // 预加载
+      await xverse.preload((current, total, url) => {
+        console.log(current, total, url)
+      })
+
       const urlParam = new window.URLSearchParams(location.search)
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
       const roomId = urlParam.get('roomId') || 'f43e5e35-94e8-4645-a614-d68cfccfca26' // 多人同房的必填参数
@@ -60,10 +68,6 @@ new Vue({
 
       // TODO: 这里因为元象素材会经常变更，所以先手动传入
       const skinDataVersion = urlParam.get('skinDataVersion') || '1005000055'
-
-      const xverse = new Xverse({
-        debug: true,
-      })
 
       const token = await this.getToken(appId as string, userId)
       if (!token) {
@@ -89,6 +93,7 @@ new Vue({
       } catch (error) {
         console.error(error)
         alert(error)
+        return
       }
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
@@ -343,13 +348,13 @@ new Vue({
       if (this.isInDisco) {
         room.disco.exit().then(() => {
           this.isInDisco = !this.isInDisco
-          room.skytv.play()
+          room.skytv?.play()
         })
       } else {
         room.disco.access().then(() => {
           room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
           this.isInDisco = !this.isInDisco
-          room.skytv.pause()
+          room.skytv?.pause()
         })
       }
     },
@@ -361,10 +366,12 @@ new Vue({
       if (this.isInLiveHall) {
         room.liveHall.exit().then(() => {
           this.isInLiveHall = !this.isInLiveHall
-          room.skytv.play()
+          room.skytv?.play()
         })
       } else {
         room.liveHall.access().then(() => {
+          this.isInLiveHall = !this.isInLiveHall
+          room.skytv?.pause()
           const liveInfos: ILiveInfo[] = new Array(4).fill(null).map((item, index) => {
             return {
               id: 'liveBoard' + index,
@@ -375,8 +382,6 @@ new Vue({
             }
           })
           room.liveHall.setLiveInfos(liveInfos)
-          this.isInLiveHall = !this.isInLiveHall
-          room.skytv.pause()
         })
       }
     },

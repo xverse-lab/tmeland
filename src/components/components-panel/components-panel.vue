@@ -75,15 +75,15 @@ export default {
       })
     },
     async changeAvatarComponentsConfirm() {
+      this.$emit('close')
       this.avatarComponents = this.previewingAvatarComponents
       this.previewingAvatarComponents = []
       window.room.userAvatar.changeComponents({ avatarComponents: this.avatarComponents, mode: ChangeComponentsMode.Confirm, endAnimation: 'GiftClap' })
-      this.$emit('close')
     },
     async changeAvatarComponentsCancle() {
+      this.$emit('close')
       this.previewingAvatarComponents = []
       window.room.userAvatar.changeComponents({ avatarComponents: this.avatarComponents, mode: ChangeComponentsMode.Cancel })
-      this.$emit('close')
     },
     isComponentActive(type, id) {
       let curComponents = this.avatarComponents
