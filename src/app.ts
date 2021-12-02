@@ -39,6 +39,7 @@ new Vue({
       avatarComponents: [] as any[],
       isInBox: false, // 是否在包厢中
       isOnVehicle: false, // 是否在载具上
+      viewMode: 'full',
     }
   },
   mounted() {
@@ -47,12 +48,17 @@ new Vue({
   methods: {
     async initRoom() {
       const xverse = new Xverse({
-        debug: true,
+        debug: false,
       })
-      // 预加载
-      await xverse.preload((current, total, url) => {
-        console.log(current, total, url)
-      })
+      // 景观模式
+      try {
+        await xverse.preload('simple', (progress: number, total: number) => {
+          console.log(progress, total)
+        })
+      } catch (error) {
+        console.error(error)
+        return
+      }
 
       const urlParam = new window.URLSearchParams(location.search)
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
@@ -87,6 +93,7 @@ new Vue({
           skinDataVersion,
           nickname: userId,
           firends: ['user1'],
+          // viewMode: 'simple',
         })
         this.bindUserAvatarEvent()
         ;(window as any).room = room
@@ -95,9 +102,22 @@ new Vue({
         alert(error)
         return
       }
+
+      // 景观模式
+      try {
+        await xverse.preload('full', (progress: number, total: number) => {
+          console.log(progress, total)
+        })
+        room.setVideMode('full')
+        this.viewMode = 'full'
+      } catch (error) {
+        console.error(error)
+        return
+      }
+
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
-      this.setSkytvVideo()
+      // this.setSkytvVideo()
       this.setMV()
       this.bindClickEvent()
       this.getAvatarComponents()
@@ -305,30 +325,8 @@ new Vue({
     handleMinimapSelect(item: { id: string }) {
       let id: string
       if ((id = item.id)) {
-        this.toggleMotionType(MotionType.Run).then(() => {
-          room.userAvatar?.moveToArea(id)
-        })
+        room.userAvatar?.moveToArea(id)
       }
-    },
-
-    /**
-     * 切换走跑模式
-     * @param mode
-     * @returns
-     */
-    toggleMotionType(mode: MotionType) {
-      if (this.motionType === mode) return Promise.resolve()
-      if (!room.userAvatar || room.userAvatar.isMoving || room.userAvatar.isRotating) {
-        return Promise.reject()
-      }
-      return room.userAvatar
-        .setMotionType({ type: mode })
-        .then(() => {
-          this.motionType = mode
-        })
-        .catch(() => {
-          console.error(`切换${mode === MotionType.Run ? '走' : '跑'}模式失败`)
-        })
     },
 
     /**
@@ -348,12 +346,14 @@ new Vue({
       if (this.isInDisco) {
         room.disco.exit().then(() => {
           this.isInDisco = !this.isInDisco
-          room.skytv?.play()
+          // room.skytv?.play()
+          room.skytv?.hide()
         })
       } else {
         room.disco.access().then(() => {
           room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
           this.isInDisco = !this.isInDisco
+          room.skytv?.show()
           room.skytv?.pause()
         })
       }
@@ -366,11 +366,13 @@ new Vue({
       if (this.isInLiveHall) {
         room.liveHall.exit().then(() => {
           this.isInLiveHall = !this.isInLiveHall
-          room.skytv?.play()
+          // room.skytv?.play()
+          room.skytv?.hide()
         })
       } else {
         room.liveHall.access().then(() => {
           this.isInLiveHall = !this.isInLiveHall
+          room.skytv?.show()
           room.skytv?.pause()
           const liveInfos: ILiveInfo[] = new Array(4).fill(null).map((item, index) => {
             return {

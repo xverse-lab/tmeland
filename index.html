@@ -20,7 +20,7 @@
       <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
     </div>
     <minimap v-show="showMinimap" :current-area="currentArea" @select="handleMinimapSelect" @close="showMinimap = !showMinimap"></minimap>
-    <div class="function_control_btns" v-cloak>
+    <div class="function_control_btns" v-cloak v-if="viewMode == 'full'">
       <template v-if="!isInPhotoBooth">
         <button @click="startPlayRain">开启红包雨</button>
         <button @click="toggleDisco">{{isInDisco?'离开迪厅':'前往迪厅'}}</button>
