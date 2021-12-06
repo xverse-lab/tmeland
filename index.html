@@ -15,6 +15,7 @@
 
 <body>
   <canvas id="canvas" class="stream unselect"></canvas>
+  <video id='tv' loop autoplay muted hidden></video>
   <div id="app">
     <div class="animation_list" v-if="animations.length && showAnimation">
       <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
@@ -28,7 +29,6 @@
         <button @click="toggleComponentsPanel">换装</button>
         <button @click="toggleShowAnimation">互动</button>
         <button @click="showMinimap = !showMinimap">{{showMinimap ? '关闭' : '打开'}}小地图</button>
-        <button @click="toggleMotionType(motionType == 0 ? 1 : 0)">移动：{{motionType == 0 ? '走' : '跑'}}</button>
         <button @click="setPerson(person == 1 ? 0 : 1)">第{{person == 1 ? '一' : '三'}}人称</button>
         <button @click="toggleBox('left')">{{isInBox?"离开左包厢":"前往左包厢"}}</button>
         <button @click="toggleBox('right')">{{isInBox?"离开右包厢":"前往右包厢"}}</button>

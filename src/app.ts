@@ -12,6 +12,8 @@ import {
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
+import Hls from 'hls.js'
+
 let room: XverseRoom
 
 new Vue({
@@ -29,7 +31,6 @@ new Vue({
       animations: [] as string[], // 可播放的动画
       currentShot: '', // 当前拍照模式
       showMinimap: false, // 是否展示小地图
-      motionType: MotionType.Walk, // 移动方式
       person: Person.Third,
       currentArea: '', // 音乐岛上当前区域
       isInDisco: false, // 是否在迪厅中
@@ -40,6 +41,8 @@ new Vue({
       isInBox: false, // 是否在包厢中
       isOnVehicle: false, // 是否在载具上
       viewMode: 'full',
+      isInGameCenter: false, // 在游戏厅中
+      isOverTower: false, // 在瞭望塔上
     }
   },
   mounted() {
@@ -48,7 +51,7 @@ new Vue({
   methods: {
     async initRoom() {
       const xverse = new Xverse({
-        debug: false,
+        debug: true,
       })
       // 景观模式
       try {
@@ -62,18 +65,20 @@ new Vue({
 
       const urlParam = new window.URLSearchParams(location.search)
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
-      const roomId = urlParam.get('roomId') || 'f43e5e35-94e8-4645-a614-d68cfccfca26' // 多人同房的必填参数
+      // 注意 1.0.32 更新了新的 roomId
+      const roomId = urlParam.get('roomId') || '0545ccd7f72c4e749d508d5e814a1130'
       const userId = urlParam.get('userId') || this.userId
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
       const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
       const skinId = (urlParam.get('skinId') || import.meta.env.VITE_SKINID) as string
       this.avatarId = avatarId
+      // 注意 1.0.32 更换了测试后台
       const wsServerUrl = urlParam.get('ws')
         ? decodeURIComponent(urlParam.get('ws')!)
-        : 'wss://uat-eks.xverse.cn/xverse/ws' // TODO: 测试联调服务，后面上线可以不传
+        : 'wss://uat-eks.xverse.cn/newdata/ws' // TODO: 测试联调服务，后面上线可以不传
 
-      // TODO: 这里因为元象素材会经常变更，所以先手动传入
-      const skinDataVersion = urlParam.get('skinDataVersion') || '1005000055'
+      // 注意 1.0.32 更新了新的数据版本
+      const skinDataVersion = urlParam.get('skinDataVersion') || '1005000122'
 
       const token = await this.getToken(appId as string, userId)
       if (!token) {
@@ -93,9 +98,10 @@ new Vue({
           skinDataVersion,
           nickname: userId,
           firends: ['user1'],
-          // viewMode: 'simple',
+          viewMode: 'simple',
         })
         this.bindUserAvatarEvent()
+        this.setMV()
         ;(window as any).room = room
       } catch (error) {
         console.error(error)
@@ -108,7 +114,7 @@ new Vue({
         await xverse.preload('full', (progress: number, total: number) => {
           console.log(progress, total)
         })
-        room.setVideMode('full')
+        await room.setViewMode('full')
         this.viewMode = 'full'
       } catch (error) {
         console.error(error)
@@ -118,7 +124,6 @@ new Vue({
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
       // this.setSkytvVideo()
-      this.setMV()
       this.bindClickEvent()
       this.getAvatarComponents()
     },
@@ -172,11 +177,34 @@ new Vue({
           this.toggleVehicle(VehicleType.Airship)
         } else if (event.target && event.target.name === ClickTargetName.HotAirBalloonEntrance) {
           this.toggleVehicle(VehicleType.HotAirBalloon)
-        } else if (event.target && event.target.name === ClickTargetName.DiscoEntrance) {
+        } else if (
+          event.target &&
+          (event.target.name === ClickTargetName.DiscoEntrance || event.target.name === ClickTargetName.DiscoExit)
+        ) {
           this.toggleDisco()
-        } else if (event.target && event.target.name === ClickTargetName.LiveHallEntrance) {
-          // this.toggle(VehicleType.HotAirBalloon)
+        } else if (
+          event.target &&
+          (event.target.name === ClickTargetName.GameCenterEntrance ||
+            event.target.name === ClickTargetName.GameCenterExit)
+        ) {
+          this.toggleGameCenter()
+        } else if (
+          event.target &&
+          (event.target.name === ClickTargetName.LiveHallEntrance || event.target.name === ClickTargetName.LiveHallExit)
+        ) {
           this.toggleLiveHall()
+        } else if (
+          event.target &&
+          (event.target.name === ClickTargetName.RightBoxEntrance ||
+            event.target.name === ClickTargetName.LeftBoxEntrance)
+        ) {
+          this.toggleBox(event.target.name === ClickTargetName.LeftBoxEntrance ? 'left' : 'right')
+        } else if (
+          event.target &&
+          (event.target.name === ClickTargetName.WatchTowerEntrance ||
+            event.target.name === ClickTargetName.WatchTowerExit)
+        ) {
+          this.toggleTower()
         } else {
           room.avatars.forEach((avatar) => {
             avatar.hideButtons()
@@ -213,6 +241,51 @@ new Vue({
       }
     },
 
+    async toggleTower() {
+      if (!this.isOverTower) {
+        try {
+          await room.watchTower.access()
+          console.info('transfer')
+          this.isOverTower = true
+        } catch (error) {
+          console.error(`前往暸望塔失败, msg: ${error}`)
+        }
+      } else {
+        if (room.watchTower.telescope.actived) {
+          console.error('请退出望远镜模式后再退出')
+          return
+        }
+        try {
+          await room.watchTower.exit()
+          this.isOverTower = false
+        } catch (error) {
+          console.error(`离开暸望塔失败, msg: ${error}`)
+        }
+      }
+    },
+
+    toggleGameCenter() {
+      if (this.isInGameCenter) {
+        room.gameCenter
+          .exit()
+          .then(() => {
+            this.isInGameCenter = false
+          })
+          .catch((e) => {
+            console.error(`离开游戏厅失败, msg: ${e}`)
+          })
+      } else {
+        room.gameCenter
+          .access()
+          .then(() => {
+            this.isInGameCenter = true
+          })
+          .catch(() => {
+            console.error('进入游戏厅失败')
+          })
+      }
+    },
+
     async toggleVehicle(vehicle: VehicleType) {
       if (!this.isOnVehicle) {
         try {
@@ -232,33 +305,31 @@ new Vue({
     },
 
     /**
-     * 设置球幕视频
-     */
-    setSkytvVideo() {
-      room.skytv?.setUrl({
-        url: 'https://static.xverse.cn/music-festival/4ke_1.5m_crop.mp4',
-        loop: true,
-        muted: true,
-      })
-    },
-
-    /**
      * 设置广场的 MV
      */
     setMV() {
-      room.tvs[0]
-        .setUrl({
-          url: 'https://static.xverse.cn/music-festival/k_music_01.mp4',
-          loop: true,
-          muted: false,
+      const src = 'https://cctvtxyh5ca.liveplay.myqcloud.com/live/cctv1_2_hd.m3u8'
+      const videoElement = document.querySelector('#tv') as HTMLVideoElement
+      videoElement.src = src
+      if (src.includes('.m3u8')) {
+        if (Hls.isSupported()) {
+          const hls = new Hls()
+          hls.loadSource(src)
+          hls.attachMedia(videoElement)
+        } else {
+          videoElement.src = src
+        }
+      } else {
+        videoElement.src = src
+      }
+
+      room.tvs[0].setVideoElement(videoElement).then(() => {
+        room.tvs.forEach((tv, index) => {
+          if (index > 0) {
+            tv.mirrorFrom(room.tvs[0])
+          }
         })
-        .then(() => {
-          room.tvs.forEach((tv, index) => {
-            if (index > 0) {
-              tv.mirrorFrom(room.tvs[0])
-            }
-          })
-        })
+      })
     },
 
     toggleShowAnimation() {
@@ -347,14 +418,14 @@ new Vue({
         room.disco.exit().then(() => {
           this.isInDisco = !this.isInDisco
           // room.skytv?.play()
-          room.skytv?.hide()
+          // room.skytv?.hide()
         })
       } else {
         room.disco.access().then(() => {
           room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
           this.isInDisco = !this.isInDisco
-          room.skytv?.show()
-          room.skytv?.pause()
+          // room.skytv?.show()
+          // room.skytv?.pause()
         })
       }
     },
@@ -367,13 +438,13 @@ new Vue({
         room.liveHall.exit().then(() => {
           this.isInLiveHall = !this.isInLiveHall
           // room.skytv?.play()
-          room.skytv?.hide()
+          // room.skytv?.hide()
         })
       } else {
         room.liveHall.access().then(() => {
           this.isInLiveHall = !this.isInLiveHall
-          room.skytv?.show()
-          room.skytv?.pause()
+          // room.skytv?.show()
+          // room.skytv?.pause()
           const liveInfos: ILiveInfo[] = new Array(4).fill(null).map((item, index) => {
             return {
               id: 'liveBoard' + index,
