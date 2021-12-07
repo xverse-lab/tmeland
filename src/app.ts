@@ -73,10 +73,10 @@ new Vue({
       const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
       const skinId = (urlParam.get('skinId') || import.meta.env.VITE_SKINID) as string
       this.avatarId = avatarId
-      // 注意 1.0.32 更换了测试后台
+      // 注意 1.0.35 更换了测试后台
       const wsServerUrl = urlParam.get('ws')
         ? decodeURIComponent(urlParam.get('ws')!)
-        : 'wss://uat-eks.xverse.cn/newdata/ws' // TODO: 测试联调服务，后面上线可以不传
+        : 'wss://uat-eks.xverse.cn/newarch/ws' // TODO: 测试联调服务，后面上线可以不传
 
       // 注意 1.0.32 更新了新的数据版本
       const skinDataVersion = urlParam.get('skinDataVersion') || '1005000122'
