@@ -13,6 +13,7 @@ import {
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
 import Hls from 'hls.js'
+import { toast } from './toast'
 
 let room: XverseRoom
 
@@ -40,7 +41,7 @@ new Vue({
       avatarComponents: [] as any[],
       isInBox: false, // 是否在包厢中
       isOnVehicle: false, // 是否在载具上
-      viewMode: 'full',
+      viewMode: 'simple',
       isInGameCenter: false, // 在游戏厅中
       isOverTower: false, // 在瞭望塔上
     }
@@ -101,7 +102,7 @@ new Vue({
           viewMode: 'simple',
         })
         this.bindUserAvatarEvent()
-        this.setMV()
+        this.bindConnectionEvent()
         ;(window as any).room = room
       } catch (error) {
         console.error(error)
@@ -114,7 +115,7 @@ new Vue({
         await xverse.preload('full', (progress: number, total: number) => {
           console.log(progress, total)
         })
-        await room.setViewMode('full')
+        room.setViewMode('full')
         this.viewMode = 'full'
       } catch (error) {
         console.error(error)
@@ -124,6 +125,7 @@ new Vue({
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
       // this.setSkytvVideo()
+      this.setMV()
       this.bindClickEvent()
       this.getAvatarComponents()
     },
@@ -136,6 +138,35 @@ new Vue({
       const avatarTypeList = await room.modelManager.getAvatarModelList()
       const avatarInfo = avatarTypeList.find((avatarType) => avatarType.id === this.avatarId)
       this.components = avatarInfo ? avatarInfo.components : []
+    },
+
+    /**
+     * 绑定连接相关的事件
+     */
+    bindConnectionEvent() {
+      room.on('repeatLogin', function () {
+        toast('该用户已经在其他地点登录', {
+          duration: 10000,
+        })
+      })
+
+      room.on('reconnecting', function ({ count }) {
+        toast(`尝试第${count}次重连`)
+      })
+
+      room.on('reconnected', function () {
+        toast('重连成功')
+      })
+
+      room.on('disconnected', function () {
+        const toastInstance = toast('连接失败，手动点击重试', {
+          duration: 100000,
+          onClick() {
+            toastInstance.hideToast()
+            room.reconnect()
+          },
+        })
+      })
     },
 
     bindUserAvatarEvent() {
