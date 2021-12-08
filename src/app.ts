@@ -3,12 +3,13 @@ import {
   IPhotoShots,
   Xverse,
   XverseRoom,
-  MotionType,
   Person,
   ILiveInfo,
   Avatar,
   ClickTargetName,
   VehicleType,
+  XverseError,
+  Codes,
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
@@ -44,6 +45,10 @@ new Vue({
       viewMode: 'simple',
       isInGameCenter: false, // 在游戏厅中
       isOverTower: false, // 在瞭望塔上
+      isShowBooking: false, // 展示预约页面
+      isTimeToGo: false, // 展示现在前往
+      vehicle: '',
+      clickVehicle: '',
     }
   },
   mounted() {
@@ -317,20 +322,57 @@ new Vue({
       }
     },
 
+    async toggleBooking(vehicle: VehicleType) {
+      try {
+        await room.vehicle.getReserveSeat(vehicle)
+        this.isShowBooking = false
+        const getReserveStatusInterval = setInterval(() => {
+          room.vehicle
+            .getReserveState(vehicle)
+            .then((res) => {
+              if (res && res.ready) {
+                clearInterval(getReserveStatusInterval)
+                toast('快点登上飞艇')
+                this.isTimeToGo = true
+                const goToShip = setTimeout(() => {
+                  this.isTimeToGo = false
+                  clearTimeout(goToShip)
+                }, 10000)
+              }
+            })
+            .catch((error) => {
+              console.log('获取预约结果接口', error)
+            })
+        }, 4000)
+      } catch (error) {
+        toast('预约失败' + error)
+      }
+    },
     async toggleVehicle(vehicle: VehicleType) {
       if (!this.isOnVehicle) {
         try {
           await room.vehicle.access(vehicle)
-        } catch (error) {
-          console.error(`上${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败`)
+          this.vehicle = vehicle
+          this.isTimeToGo = false
+          this.clickVehicle = vehicle
+          this.isOnVehicle = true
+        } catch (error: any) {
+          console.warn(error)
+          if (error.code === Codes.GetOnVehicle) {
+            this.isShowBooking = true
+            this.clickVehicle = vehicle
+            toast('抱歉目前已满员')
+          } else {
+            toast(`上${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败, msg: ${error}`)
+          }
         }
-        this.isOnVehicle = true
       } else {
         try {
           await room.vehicle.exit()
           this.isOnVehicle = false
+          this.vehicle = ''
         } catch (error) {
-          console.error(`下${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败`)
+          toast(`下${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败, msg: ${error}`)
         }
       }
     },
@@ -354,7 +396,7 @@ new Vue({
         videoElement.src = src
       }
 
-      room.tvs[0].setVideoElement(videoElement).then(() => {
+      room.tvs[0].setVideo(videoElement).then(() => {
         room.tvs.forEach((tv, index) => {
           if (index > 0) {
             tv.mirrorFrom(room.tvs[0])

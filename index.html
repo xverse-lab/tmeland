@@ -15,7 +15,7 @@
 
 <body>
   <canvas id="canvas" class="stream unselect"></canvas>
-  <video id='tv' loop autoplay muted hidden></video>
+  <video id='tv' loop autoplay hidden></video>
   <div id="app">
     <div class="animation_list" v-if="animations.length && showAnimation">
       <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
@@ -30,6 +30,8 @@
         <button @click="toggleShowAnimation">互动</button>
         <button @click="showMinimap = !showMinimap">{{showMinimap ? '关闭' : '打开'}}小地图</button>
         <button @click="setPerson(person == 1 ? 0 : 1)">第{{person == 1 ? '一' : '三'}}人称</button>
+        <button @click="toggleVehicle('airship')" v-if="status==='normal'||status==='airship'">{{vehicle==='airship'?"退出飞艇":"前往飞艇"}}</button>
+        <button @click="toggleVehicle('hotAirBalloon')" v-if="status==='normal'||status==='balloon'" >{{vehicle==='hotAirBalloon'?"退出热气球":"前往热气球"}}</button>
         <button @click="toggleBox('left')">{{isInBox?"离开左包厢":"前往左包厢"}}</button>
         <button @click="toggleBox('right')">{{isInBox?"离开右包厢":"前往右包厢"}}</button>
       </template>
@@ -44,7 +46,13 @@
 
     <components-panel :components="components" :current-components="avatarComponents" v-if="showComponentsPanel" @close="toggleComponentsPanel">
     </components-panel>
-
+    <div style="position: fixed; top: 50%; left: 20%; right: 20%; color: #fff " className="modal_book" id="booking" v-if="isShowBooking">
+      <button @click="toggleBooking(clickVehicle)">预约</button>
+      <button @click="() => {isShowBooking = false}">不预约</button>
+    </div>
+    <div style="position: fixed; top: 50%; left: 20%; right: 20%; color: #fff " className="modal_book" id="gouto" v-if="isTimeToGo">
+      <button @click="toggleVehicle(clickVehicle)">登 上{{ clickVehicle }}</button>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
