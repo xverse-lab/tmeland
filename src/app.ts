@@ -324,26 +324,15 @@ new Vue({
 
     async toggleBooking(vehicle: VehicleType) {
       try {
-        await room.vehicle.getReserveSeat(vehicle)
         this.isShowBooking = false
-        const getReserveStatusInterval = setInterval(() => {
-          room.vehicle
-            .getReserveState(vehicle)
-            .then((res) => {
-              if (res && res.ready) {
-                clearInterval(getReserveStatusInterval)
-                toast('快点登上飞艇')
-                this.isTimeToGo = true
-                const goToShip = setTimeout(() => {
-                  this.isTimeToGo = false
-                  clearTimeout(goToShip)
-                }, 10000)
-              }
-            })
-            .catch((error) => {
-              console.log('获取预约结果接口', error)
-            })
-        }, 4000)
+        await room.vehicle.getReserveSeat(vehicle)
+        room.vehicle.on('goOnVehicleReady', () => {
+          this.isTimeToGo = true
+          const goToShip = setTimeout(() => {
+            this.isTimeToGo = false
+            clearTimeout(goToShip)
+          }, 10000)
+        })
       } catch (error) {
         toast('预约失败' + error)
       }
