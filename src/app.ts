@@ -8,8 +8,9 @@ import {
   Avatar,
   ClickTargetName,
   VehicleType,
-  XverseError,
   Codes,
+  XverseError,
+  IViewMode,
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
@@ -47,6 +48,7 @@ new Vue({
       isOverTower: false, // 在瞭望塔上
       isShowBooking: false, // 展示预约页面
       isTimeToGo: false, // 展示现在前往
+      isBooking: false, // 是否已在预约队列中
       vehicle: '',
       clickVehicle: '',
     }
@@ -56,9 +58,7 @@ new Vue({
   },
   methods: {
     async initRoom() {
-      const xverse = new Xverse({
-        debug: true,
-      })
+      const xverse = new Xverse()
       // 景观模式
       try {
         await xverse.preload('simple', (progress: number, total: number) => {
@@ -115,13 +115,17 @@ new Vue({
         return
       }
 
-      // 景观模式
+      // const viewMode: IViewMode = 'full'
+      // 观察者模式
+      const viewMode: IViewMode = 'observer'
+
       try {
-        await xverse.preload('full', (progress: number, total: number) => {
+        // 预下载对应阶段的资源
+        await xverse.preload(viewMode, (progress: number, total: number) => {
           console.log(progress, total)
         })
-        room.setViewMode('full')
-        this.viewMode = 'full'
+        room.setViewMode(viewMode)
+        this.viewMode = viewMode
       } catch (error) {
         console.error(error)
         return
@@ -361,6 +365,7 @@ new Vue({
           this.isOnVehicle = false
           this.vehicle = ''
         } catch (error) {
+          this.status = 'normal'
           toast(`下${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败, msg: ${error}`)
         }
       }
