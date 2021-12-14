@@ -11,6 +11,7 @@ import {
   Codes,
   XverseError,
   IViewMode,
+  ICurrentArea,
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
@@ -62,7 +63,7 @@ new Vue({
       const xverse = new Xverse()
       // 景观模式
       try {
-        await xverse.preload('simple', (progress: number, total: number) => {
+        await xverse.preload.start('simple', (progress: number, total: number) => {
           console.log(progress, total)
         })
       } catch (error) {
@@ -72,7 +73,7 @@ new Vue({
 
       const urlParam = new window.URLSearchParams(location.search)
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
-      // 注意 1.0.32 更新了新的 roomId
+      // 注意 1.0.41 更新了新的 roomId
       const roomId = urlParam.get('roomId') || 'e629ef3e-022d-4e64-8654-703bb96410eb'
       const userId = urlParam.get('userId') || this.userId
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
@@ -123,12 +124,16 @@ new Vue({
 
       try {
         // 预下载对应阶段的资源
-        await xverse.preload(viewMode, (progress: number, total: number) => {
+        await xverse.preload.start(viewMode, (progress: number, total: number) => {
           console.log(progress, total)
         })
         room.setViewMode(viewMode)
         this.viewMode = viewMode
-      } catch (error) {
+      } catch (error: any) {
+        if (error.code === Codes.PreloadCanceled) {
+          toast('预加载被取消')
+          return
+        }
         console.error(error)
         return
       }
@@ -378,7 +383,6 @@ new Vue({
           this.isOnVehicle = false
           this.vehicle = ''
         } catch (error) {
-          this.status = 'normal'
           toast(`下${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败, msg: ${error}`)
         }
       }
@@ -476,7 +480,7 @@ new Vue({
     handleMinimapSelect(item: { id: string }) {
       let id: string
       if ((id = item.id)) {
-        room.userAvatar?.moveToArea(id)
+        room.userAvatar?.moveToArea(id as ICurrentArea)
       }
     },
 
