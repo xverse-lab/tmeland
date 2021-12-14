@@ -21,6 +21,7 @@
       <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
     </div>
     <minimap v-show="showMinimap" :current-area="currentArea" @select="handleMinimapSelect" @close="showMinimap = !showMinimap"></minimap>
+
     <div class="function_control_btns" v-cloak v-if="viewMode == 'full'">
       <template v-if="!isInPhotoBooth">
         <button @click="startPlayRain">开启红包雨</button>
@@ -42,6 +43,11 @@
         <button @click="setShots('close')" :class="currentShot==='close'?'active':''">近景</button>
         <button @click="takePhoto">拍照</button>
       </template>
+    </div>
+    <div v-else="viewMode === 'observer'">
+        <div class="function_control_btns">
+          <button @click="switchObserver">切换至{{observerArea === 'inDisco' ? '广场' : '迪厅' }}</button>
+        </div>
     </div>
 
     <components-panel :components="components" :current-components="avatarComponents" v-if="showComponentsPanel" @close="toggleComponentsPanel">

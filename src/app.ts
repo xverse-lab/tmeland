@@ -51,6 +51,7 @@ new Vue({
       isBooking: false, // 是否已在预约队列中
       vehicle: '',
       clickVehicle: '',
+      observerArea: '', // 观察者区域
     }
   },
   mounted() {
@@ -72,7 +73,7 @@ new Vue({
       const urlParam = new window.URLSearchParams(location.search)
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
       // 注意 1.0.32 更新了新的 roomId
-      const roomId = urlParam.get('roomId') || '0545ccd7f72c4e749d508d5e814a1130'
+      const roomId = urlParam.get('roomId') || 'e629ef3e-022d-4e64-8654-703bb96410eb'
       const userId = urlParam.get('userId') || this.userId
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
       const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
@@ -118,6 +119,7 @@ new Vue({
       // const viewMode: IViewMode = 'full'
       // 观察者模式
       const viewMode: IViewMode = 'observer'
+      console.log('进入' + viewMode + '模式')
 
       try {
         // 预下载对应阶段的资源
@@ -281,6 +283,16 @@ new Vue({
       }
     },
 
+    switchObserver() {
+      const targetArea = this.observerArea === 'inDisco' ? 'birthSquare' : 'inDisco'
+      room.switchObserver(targetArea).then(() => {
+        this.observerArea = targetArea
+        if (this.observerArea === 'inDisco') {
+          this.afterDiscoAccessed()
+        }
+      })
+    },
+
     async toggleTower() {
       if (!this.isOverTower) {
         try {
@@ -330,8 +342,9 @@ new Vue({
       try {
         this.isShowBooking = false
         await room.vehicle.getReserveSeat(vehicle)
+        this.isBooking = true
         room.vehicle.on('goOnVehicleReady', () => {
-          this.isTimeToGo = true
+          this.isBooking = false
           const goToShip = setTimeout(() => {
             this.isTimeToGo = false
             clearTimeout(goToShip)
@@ -484,17 +497,17 @@ new Vue({
       if (this.isInDisco) {
         room.disco.exit().then(() => {
           this.isInDisco = !this.isInDisco
-          // room.skytv?.play()
-          // room.skytv?.hide()
         })
       } else {
         room.disco.access().then(() => {
-          room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
-          this.isInDisco = !this.isInDisco
-          // room.skytv?.show()
-          // room.skytv?.pause()
+          this.afterDiscoAccessed()
         })
       }
+    },
+
+    afterDiscoAccessed() {
+      room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
+      this.isInDisco = !this.isInDisco
     },
 
     /**
