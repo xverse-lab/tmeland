@@ -31,8 +31,8 @@
         <button @click="toggleShowAnimation">互动</button>
         <button @click="showMinimap = !showMinimap">{{showMinimap ? '关闭' : '打开'}}小地图</button>
         <button @click="setPerson(person == 1 ? 0 : 1)">第{{person == 1 ? '一' : '三'}}人称</button>
-        <button @click="toggleVehicle('airship')" v-if="status==='normal'||status==='airship'">{{vehicle==='airship'?"退出飞艇":"前往飞艇"}}</button>
-        <button @click="toggleVehicle('hotAirBalloon')" v-if="status==='normal'||status==='balloon'" >{{vehicle==='hotAirBalloon'?"退出热气球":"前往热气球"}}</button>
+        <button @click="toggleVehicle('airship')" >{{vehicle==='airship'?"退出飞艇":"前往飞艇"}}</button>
+        <button @click="toggleVehicle('hotAirBalloon')" >{{vehicle==='hotAirBalloon'?"退出热气球":"前往热气球"}}</button>
         <button @click="toggleBox('left')">{{isInBox?"离开左包厢":"前往左包厢"}}</button>
         <button @click="toggleBox('right')">{{isInBox?"离开右包厢":"前往右包厢"}}</button>
       </template>
@@ -44,7 +44,7 @@
         <button @click="takePhoto">拍照</button>
       </template>
     </div>
-    <div v-else="viewMode === 'observer'">
+    <div v-else-if="viewMode === 'observer' || viewMode === 'serverless'">
         <div class="function_control_btns">
           <button @click="switchObserver">切换至{{observerArea === 'inDisco' ? '广场' : '迪厅' }}</button>
         </div>

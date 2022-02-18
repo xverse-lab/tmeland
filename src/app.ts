@@ -9,7 +9,6 @@ import {
   ClickTargetName,
   VehicleType,
   Codes,
-  XverseError,
   IViewMode,
   ICurrentArea,
 } from '@xverse/tmeland'
@@ -18,6 +17,13 @@ import ComponentsPanel from './components/components-panel/components-panel.vue'
 import Hls from 'hls.js'
 import { toast } from './toast'
 
+const urlParam = new window.URLSearchParams(location.search)
+const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
+
+// 注意 1.1.2 更新了 appId 的传参位置
+const xverse = new Xverse({
+  appId: appId
+})
 let room: XverseRoom
 
 new Vue({
@@ -56,37 +62,40 @@ new Vue({
     }
   },
   mounted() {
-    this.initRoom()
+    this.initRoom('full')
   },
   methods: {
-    async initRoom() {
-      const xverse = new Xverse()
+    async initRoom(viewMode: IViewMode) {
       // 景观模式
       try {
-        await xverse.preload.start('simple', (progress: number, total: number) => {
+        // 对应 viewMode 进房就需要预下载对应模式的资源。
+        // 另外 serverless 模式需要对应下载 'observer' 模式的资源
+        await xverse.preload?.start(viewMode as IViewMode, (progress: number, total: number) => {
           console.log(progress, total)
         })
-      } catch (error) {
+      } catch (error: any) {
         console.error(error)
-        return
+        if (error.code === Codes.PreloadCanceled) {
+          toast('预加载被取消')
+          return
+        }
+        alert(error)
       }
 
-      const urlParam = new window.URLSearchParams(location.search)
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
       // 注意 1.0.41 更新了新的 roomId
       const roomId = urlParam.get('roomId') || 'e629ef3e-022d-4e64-8654-703bb96410eb'
       const userId = urlParam.get('userId') || this.userId
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
-      const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
       const skinId = (urlParam.get('skinId') || import.meta.env.VITE_SKINID) as string
       this.avatarId = avatarId
       // 注意 1.0.35 更换了测试后台
       const wsServerUrl = urlParam.get('ws')
         ? decodeURIComponent(urlParam.get('ws')!)
-        : 'wss://uat-eks.xverse.cn/newarch/ws' // TODO: 测试联调服务，后面上线可以不传
+        : 'wss://sit-eks.xverse.cn/presstest/ws' // TODO: 测试联调服务，后面上线可以不传
 
-      // 注意 1.0.32 更新了新的数据版本
-      const skinDataVersion = urlParam.get('skinDataVersion') || '1005000122'
+      // 注意 1.1.2 更新了新的数据版本
+      const versionId = urlParam.get('version') || '00122'
 
       const token = await this.getToken(appId as string, userId)
       if (!token) {
@@ -102,41 +111,51 @@ new Vue({
           userId,
           wsServerUrl: wsServerUrl,
           appId: appId,
-          token: token,
-          skinDataVersion,
+          token: ' ',
+          versionId,
           nickname: userId,
           firends: ['user1'],
-          viewMode: 'simple',
+          viewMode: viewMode,
         })
+        this.viewMode = viewMode
         this.bindUserAvatarEvent()
         this.bindConnectionEvent()
         ;(window as any).room = room
-      } catch (error) {
+      } catch (error: any) {
         console.error(error)
+        if (error && error.code) {
+          const code = error.code
+          // 如果错误码是 2000 开头，代表服务器异常。或者有其他异常都可以丢进去
+          if (code >= 2000 && code < 3000) {
+            console.log('进入无后端模式进房')
+            // 以无后端模式进房，不会与元象后端建立网络连接，表现和 'observer' 模式一样
+            this.initRoom('serverless')
+            return
+          }
+        }
         alert(error)
         return
       }
 
-      // const viewMode: IViewMode = 'full'
       // 观察者模式
-      const viewMode: IViewMode = 'observer'
-      console.log('进入' + viewMode + '模式')
+      // const viewMode: IViewMode = 'observer'
+      // console.log('进入' + viewMode + '模式')
 
-      try {
-        // 预下载对应阶段的资源
-        await xverse.preload.start(viewMode, (progress: number, total: number) => {
-          console.log(progress, total)
-        })
-        room.setViewMode(viewMode)
-        this.viewMode = viewMode
-      } catch (error: any) {
-        if (error.code === Codes.PreloadCanceled) {
-          toast('预加载被取消')
-          return
-        }
-        console.error(error)
-        return
-      }
+      // try {
+      //   // 预下载对应阶段的资源
+      //   await xverse.preload.start(viewMode, (progress: number, total: number) => {
+      //     console.log(progress, total)
+      //   })
+      //   room.setViewMode(viewMode)
+      //   this.viewMode = viewMode
+      // } catch (error: any) {
+      //   if (error.code === Codes.PreloadCanceled) {
+      //     toast('预加载被取消')
+      //     return
+      //   }
+      //   console.error(error)
+      //   return
+      // }
 
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
@@ -193,7 +212,7 @@ new Vue({
         this.currentArea = room.userAvatar.currentArea
         this.avatarComponents = room.userAvatar.avatarComponents
         room.userAvatar.on('stopMoving', ({ target }) => {
-          this.currentArea = target.currentArea
+          this.currentArea = (target as Avatar).currentArea
         })
       })
     },
@@ -343,13 +362,54 @@ new Vue({
       }
     },
 
+    async gameCenterExit() {
+      return room.gameCenter
+        .exit()
+        .then(() => {
+          this.isInGameCenter = false
+        })
+        .catch((e) => {
+          console.error(`离开游戏厅失败, msg: ${e}`)
+        })
+    },
+    async discoExit() {
+      return room.disco.exit().then(() => {
+        this.isInDisco = !this.isInDisco
+      })
+    },
+    async liveHallExit() {
+      return room.liveHall.exit().then(() => {
+        this.isInLiveHall = !this.isInLiveHall
+      })
+    },
+    async exitRoom() {
+      if (this.isInDisco) {
+        return this.discoExit()
+      }
+      if (this.isInGameCenter) {
+        return this.gameCenterExit()
+      }
+      // if (this.isInBox) {
+      //   return this.boxExit()
+      // }
+      if (this.isInLiveHall) {
+        return this.liveHallExit()
+      }
+      // if (this.isInTelescopeMode) {
+      //   return this.telescopeExit()
+      // }
+      // if (this.isInScreenShotMode) {
+      //   return this.ScreenShotModeExit()
+      // }
+    },
+
     async toggleBooking(vehicle: VehicleType) {
       try {
         this.isShowBooking = false
         await room.vehicle.getReserveSeat(vehicle)
-        this.isBooking = true
         room.vehicle.on('goOnVehicleReady', () => {
-          this.isBooking = false
+          toast('快点登上飞艇')
+          this.isTimeToGo = true
           const goToShip = setTimeout(() => {
             this.isTimeToGo = false
             clearTimeout(goToShip)
@@ -360,32 +420,34 @@ new Vue({
       }
     },
     async toggleVehicle(vehicle: VehicleType) {
-      if (!this.isOnVehicle) {
-        try {
-          await room.vehicle.access(vehicle)
-          this.vehicle = vehicle
-          this.isTimeToGo = false
-          this.clickVehicle = vehicle
-          this.isOnVehicle = true
-        } catch (error: any) {
-          console.warn(error)
-          if (error.code === Codes.GetOnVehicle) {
-            this.isShowBooking = true
+      this.exitRoom().then(async () => {
+        if (!this.isOnVehicle) {
+          try {
+            await room.vehicle.access(vehicle)
+            this.vehicle = vehicle
+            this.isTimeToGo = false
             this.clickVehicle = vehicle
-            toast('抱歉目前已满员')
-          } else {
-            toast(`上${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败, msg: ${error}`)
+            this.isOnVehicle = true
+          } catch (error: any) {
+            console.warn(error)
+            if (error.code === Codes.GetOnVehicle) {
+              this.isShowBooking = true
+              this.clickVehicle = vehicle
+              toast('抱歉目前已满员')
+            } else {
+              toast(`上${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败, msg: ${error}`)
+            }
+          }
+        } else {
+          try {
+            await room.vehicle.exit()
+            this.isOnVehicle = false
+            this.vehicle = ''
+          } catch (error) {
+            toast(`下${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败, msg: ${error}`)
           }
         }
-      } else {
-        try {
-          await room.vehicle.exit()
-          this.isOnVehicle = false
-          this.vehicle = ''
-        } catch (error) {
-          toast(`下${vehicle === VehicleType.HotAirBalloon ? '热气球' : '飞艇'}失败, msg: ${error}`)
-        }
-      }
+      })
     },
 
     /**
@@ -497,11 +559,9 @@ new Vue({
     /**
      * 进出迪厅
      */
-    toggleDisco() {
+    async toggleDisco() {
       if (this.isInDisco) {
-        room.disco.exit().then(() => {
-          this.isInDisco = !this.isInDisco
-        })
+        await this.discoExit()
       } else {
         room.disco.access().then(() => {
           this.afterDiscoAccessed()
@@ -517,13 +577,9 @@ new Vue({
     /**
      * 进出迪厅
      */
-    toggleLiveHall() {
+    async toggleLiveHall() {
       if (this.isInLiveHall) {
-        room.liveHall.exit().then(() => {
-          this.isInLiveHall = !this.isInLiveHall
-          // room.skytv?.play()
-          // room.skytv?.hide()
-        })
+        await this.liveHallExit()
       } else {
         room.liveHall.access().then(() => {
           this.isInLiveHall = !this.isInLiveHall
