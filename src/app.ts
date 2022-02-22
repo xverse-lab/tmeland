@@ -11,12 +11,18 @@ import {
   Codes,
   IViewMode,
   ICurrentArea,
+  IBossNames,
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
 import Hls from 'hls.js'
 import { toast } from './toast'
-
+const bossAvatarIdMap: Record<IBossNames, string> = {
+  cussion: 'cussion_12',
+  shirley: 'shirley_14',
+  ross: 'ross_07',
+  tony: 'tony_13',
+}
 const urlParam = new window.URLSearchParams(location.search)
 const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 
@@ -81,7 +87,7 @@ new Vue({
         }
         alert(error)
       }
-
+      
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
       // 注意 1.0.41 更新了新的 roomId
       const roomId = urlParam.get('roomId') || 'e629ef3e-022d-4e64-8654-703bb96410eb'
@@ -92,10 +98,11 @@ new Vue({
       // 注意 1.0.35 更换了测试后台
       const wsServerUrl = urlParam.get('ws')
         ? decodeURIComponent(urlParam.get('ws')!)
-        : 'wss://sit-eks.xverse.cn/presstest/ws' // TODO: 测试联调服务，后面上线可以不传
+        : 'wss://sit-eks.xverse.cn/presstest/ws'
 
       // 注意 1.1.2 更新了新的数据版本
-      const versionId = urlParam.get('version') || '00122'
+      const versionId = urlParam.get('version') || '00005'
+      const bossName = (urlParam.get('bossName') as IBossNames) || undefined
 
       const token = await this.getToken(appId as string, userId)
       if (!token) {
@@ -106,7 +113,7 @@ new Vue({
         room = await xverse.joinRoom({
           canvas: canvas,
           skinId: skinId,
-          avatarId: avatarId,
+          avatarId: bossName ? bossAvatarIdMap[bossName] : avatarId,
           roomId: roomId,
           userId,
           wsServerUrl: wsServerUrl,
@@ -116,6 +123,7 @@ new Vue({
           nickname: userId,
           firends: ['user1'],
           viewMode: viewMode,
+          bossName,
         })
         this.viewMode = viewMode
         this.bindUserAvatarEvent()
