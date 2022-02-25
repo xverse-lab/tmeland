@@ -28,7 +28,8 @@ const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
-  appId: appId
+  appId: appId,
+  releaseId: '2202251550_c07e01'
 })
 let room: XverseRoom
 
@@ -95,13 +96,11 @@ new Vue({
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
       const skinId = (urlParam.get('skinId') || import.meta.env.VITE_SKINID) as string
       this.avatarId = avatarId
-      // 注意 1.0.35 更换了测试后台
+      // 注意 1.1.5 更换了测试后台
       const wsServerUrl = urlParam.get('ws')
         ? decodeURIComponent(urlParam.get('ws')!)
-        : 'wss://sit-eks.xverse.cn/presstest/ws'
+        : 'wss://uat-eks.xverse.cn/ws'
 
-      // 注意 1.1.2 更新了新的数据版本
-      const versionId = urlParam.get('version') || '00005'
       const bossName = (urlParam.get('bossName') as IBossNames) || undefined
 
       const token = await this.getToken(appId as string, userId)
@@ -119,7 +118,6 @@ new Vue({
           wsServerUrl: wsServerUrl,
           appId: appId,
           token: ' ',
-          versionId,
           nickname: userId,
           firends: ['user1'],
           viewMode: viewMode,
@@ -262,11 +260,6 @@ new Vue({
             event.target.name === ClickTargetName.GameCenterExit)
         ) {
           this.toggleGameCenter()
-        } else if (
-          event.target &&
-          (event.target.name === ClickTargetName.LiveHallEntrance || event.target.name === ClickTargetName.LiveHallExit)
-        ) {
-          this.toggleLiveHall()
         } else if (
           event.target &&
           (event.target.name === ClickTargetName.RightBoxEntrance ||
