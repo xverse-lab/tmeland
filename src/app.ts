@@ -29,7 +29,7 @@ const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
   appId: appId,
-  releaseId: '2203042050_87197d'
+  releaseId: '2203091613_ca6e87'
 })
 let room: XverseRoom
 
