@@ -13,6 +13,8 @@ import {
   ICurrentArea,
   IBossNames,
   Skins,
+  CommentWallBlock,
+  ALBUM_ID_PREFIX,
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
@@ -128,6 +130,8 @@ new Vue({
         this.bindUserAvatarEvent()
         this.bindConnectionEvent()
         ;(window as any).room = room
+        this.afterJoinRoom()
+
       } catch (error: any) {
         console.error(error)
         if (error && error.code) {
@@ -170,6 +174,33 @@ new Vue({
       this.setMV()
       this.bindClickEvent()
       this.getAvatarComponents()
+    },
+
+    afterJoinRoom() {
+      if(room.skinId === Skins.MusicianHall) {
+        this.afterMusicianHallAccessed()
+      }
+    },
+
+    async afterMusicianHallAccessed() {
+      const getComment = () => {
+        const comment = {
+          content: '欢迎来到音乐厅',
+          likeCount: 100,
+          authorAvatarUrl: 'https://static.xverse.cn/images/unsplash_rdHrrFA1KKg.png',
+          authorName: '测试',
+        }
+        comment.content = new Array(Math.floor(Math.random() * 6 + 1)).fill(comment.content).join('')
+        return comment
+      }
+      setInterval(async () => {
+        const comments = new Array(5).fill(null).map((item) => getComment())
+        // 设置评论后，返回渲染的最后一条在数组中的索引
+        const lastRenderedIndex = await room.musicianHall.setComments(CommentWallBlock.Left, comments)
+        console.log('左侧评论渲染完成：渲染条数/总条数', `${lastRenderedIndex + 1}/${comments.length}`)
+        // 设置右侧评论墙
+        room.musicianHall.setComments(CommentWallBlock.Right, comments)
+      }, 5000)
     },
 
     /**
@@ -273,6 +304,11 @@ new Vue({
             event.target.name === ClickTargetName.WatchTowerExit)
         ) {
           this.toggleTower()
+        } else if (event.target && event.target.name === ClickTargetName.PlayAlbum) {
+          const id = event.target.id.split(ALBUM_ID_PREFIX)[1]
+          toast('点击专辑墙，专辑ID: ' + id)
+        } else if (event.target && event.target.name === ClickTargetName.AddComments) {
+          toast('点击了评论墙入口')
         } else {
           room.avatars.forEach((avatar) => {
             avatar.hideButtons()
