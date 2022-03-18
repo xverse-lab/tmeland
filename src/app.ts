@@ -15,6 +15,8 @@ import {
   Skins,
   CommentWallBlock,
   ALBUM_ID_PREFIX,
+  IAvatarMood,
+  PLAYING_ALBUM_ID_SUFFIX,
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
@@ -32,7 +34,7 @@ const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
   appId: appId,
-  releaseId: '2203101715_697bd0'
+  releaseId: '2203181551_55af6b'
 })
 let room: XverseRoom
 
@@ -69,6 +71,9 @@ new Vue({
       vehicle: '',
       clickVehicle: '',
       observerArea: '', // 观察者区域
+      showMoods: false,
+      moods: ['happy', 'sad'] as IAvatarMood[],
+      lastAlbumdId: '',
     }
   },
   mounted() {
@@ -305,8 +310,21 @@ new Vue({
         ) {
           this.toggleTower()
         } else if (event.target && event.target.name === ClickTargetName.PlayAlbum) {
-          const id = event.target.id.split(ALBUM_ID_PREFIX)[1]
+          const id = event.target.id
           toast('点击专辑墙，专辑ID: ' + id)
+          // 隐藏播放呼吸点
+          room.breathPoint.setVisibilityById(id, false)
+          // 心事播放中呼吸点
+          room.breathPoint.setVisibilityById(id + PLAYING_ALBUM_ID_SUFFIX, true)
+          const lastAlbumdId = this.lastAlbumdId
+          if (lastAlbumdId) {
+            // 显示上次播放呼吸点
+            room.breathPoint.setVisibilityById(lastAlbumdId, true)
+            // 隐藏上次播放中呼吸点
+            room.breathPoint.setVisibilityById(lastAlbumdId + PLAYING_ALBUM_ID_SUFFIX, false)
+          }
+          this.lastAlbumdId = id
+
         } else if (event.target && event.target.name === ClickTargetName.AddComments) {
           toast('点击了评论墙入口')
         } else {
@@ -672,6 +690,13 @@ new Vue({
       this.showComponentsPanel
         ? room.userAvatar.startChangeComponentsMode()
         : room.userAvatar.exitChangeComponentsMode()
+    },
+
+    toggleShowMoods() {
+      this.showMoods = !this.showMoods
+    },
+    setMoods(item: IAvatarMood) {
+      room.userAvatar.setMood(item)
     },
   },
 })

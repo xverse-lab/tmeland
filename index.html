@@ -20,6 +20,9 @@
     <div class="animation_list" v-if="animations.length && showAnimation">
       <button class="animation_list-item" v-for="item in animations" @click="playAnimation(item)">{{ item }}</button>
     </div>
+    <div class="animation_list" v-if="showMoods">
+      <button class="animation_list-item" v-for="item in moods" @click="setMoods(item)">{{ item }}</button>
+    </div>
     <minimap v-show="showMinimap" :current-area="currentArea" @select="handleMinimapSelect" @close="showMinimap = !showMinimap"></minimap>
 
     <div class="function_control_btns" v-cloak v-if="viewMode == 'full'">
@@ -35,6 +38,7 @@
         <button @click="toggleVehicle('hotAirBalloon')" >{{vehicle==='hotAirBalloon'?"退出热气球":"前往热气球"}}</button>
         <button @click="toggleBox('left')">{{isInBox?"离开左包厢":"前往左包厢"}}</button>
         <button @click="toggleBox('right')">{{isInBox?"离开右包厢":"前往右包厢"}}</button>
+        <button @click="toggleShowMoods">心情挂件</button>
       </template>
       <button @click="togglePhotoBooth" v-if="isInPhotoBooth">{{"退出拍照模式"}}</button>
       <template v-if="isInPhotoBooth">
