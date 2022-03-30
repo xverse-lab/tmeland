@@ -39,6 +39,7 @@
         <button @click="toggleBox('left')">{{isInBox?"离开左包厢":"前往左包厢"}}</button>
         <button @click="toggleBox('right')">{{isInBox?"离开右包厢":"前往右包厢"}}</button>
         <button @click="toggleShowMoods">心情挂件</button>
+        <input @blur="handleSay" type="text" placeholder="输入讲话内容" />
       </template>
       <button @click="togglePhotoBooth" v-if="isInPhotoBooth">{{"退出拍照模式"}}</button>
       <template v-if="isInPhotoBooth">

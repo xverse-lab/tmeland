@@ -34,7 +34,7 @@ const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
   appId: appId,
-  releaseId: '2203281907_1ef56e'
+  releaseId: '2203301019_ce4b5d'
 })
 let room: XverseRoom
 
@@ -182,6 +182,7 @@ new Vue({
     },
 
     afterJoinRoom() {
+      room.movingByClick = true
       if(room.skinId === Skins.MusicianHall) {
         this.afterMusicianHallAccessed()
       }
@@ -319,7 +320,7 @@ new Vue({
           toast('即将暂停专辑墙，ID: ' + id)
           room.musicianHall.playingAlbumdId = undefined
           // this.lastAlbumdId = undefined
-        }  else if (event.target && event.target.name === ClickTargetName.AddComments) {
+        } else if (event.target && event.target.name === ClickTargetName.AddLeftComments || event.target && event.target.name === ClickTargetName.AddRightComments) {
           toast('点击了评论墙入口')
         } else {
           room.avatars.forEach((avatar) => {
@@ -691,6 +692,13 @@ new Vue({
     },
     setMoods(item: IAvatarMood) {
       room.userAvatar.setMood(item)
+    },
+    handleSay(e: any) {
+      const value = e.target.value
+      room.userAvatar.say(value, {
+        background: ['https://app-asset-1258211750.file.myqcloud.com/2/textures/pop2.png'],
+        fontSize: 38,
+      })
     },
   },
 })
