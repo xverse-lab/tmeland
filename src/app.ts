@@ -21,7 +21,7 @@ const bossAvatarIdMap: Record<IBossNames, string> = {
   cussion: 'cussion_12',
   shirley: 'shirley_14',
   ross: 'ross_07',
-  tony: 'tony_13',
+  tony: 'testAdidas',
 }
 const urlParam = new window.URLSearchParams(location.search)
 const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
@@ -88,7 +88,7 @@ new Vue({
         }
         alert(error)
       }
-      
+
       const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
       // 注意 1.0.41 更新了新的 roomId
       const roomId = urlParam.get('roomId') || 'e629ef3e-022d-4e64-8654-703bb96410eb'
@@ -126,7 +126,7 @@ new Vue({
         this.viewMode = viewMode
         this.bindUserAvatarEvent()
         this.bindConnectionEvent()
-        ;(window as any).room = room
+          ; (window as any).room = room
       } catch (error: any) {
         console.error(error)
         if (error && error.code) {
@@ -573,6 +573,13 @@ new Vue({
     afterDiscoAccessed() {
       room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
       this.isInDisco = !this.isInDisco
+      room.avatarManager.addNpc({
+        userId: 'testAdidas',
+        avatarId: 'testAdidas',
+        avatarPosition: { x: 0, y: -750, z: -5 },
+        avatarRotation: { pitch: 0, yaw: -90, roll: 0 },
+        avatarScale: 2,
+      })
     },
 
     /**
@@ -636,5 +643,50 @@ new Vue({
         ? room.userAvatar.startChangeComponentsMode()
         : room.userAvatar.exitChangeComponentsMode()
     },
+
+    /**
+     * @description dancer 的户型移动
+     */
+    moveCardinalDancer() {
+      const performer = room.avatars.find((item) => item.userId === 'testAdidas')!
+      setTimeout(() => {
+        performer.setPosition({ x: -253.306488, y: 1663.149536, z: 0.0 })
+        performer.setRotation({
+          pitch: 0,
+          roll: 0,
+          yaw: 448.52670546351084,
+        })
+      }, 0)
+
+      setTimeout(() => {
+        console.log('start to move dancer line 1')
+        performer.move({
+          start: { x: -253.306488, y: 1663.149536, z: 0.0 },
+          end: { x: -253.306488, y: -302.402405, z: 0.0 },
+          walkSpeed: 250,
+        })
+      }, 1000 * 2)
+
+      setTimeout(() => {
+        console.log('start to move dancer line 2')
+        performer.moveHermite({
+          start: { x: -253.306488, y: -302.402405, z: 0.0 },
+          end: { x: 168.597092, y: -302.402405, z: 0.0 },
+          duration: 1000 * 10,
+          tension: 20,
+        })
+      }, 1000 * 12)
+
+      setTimeout(() => {
+        console.log('start to move dancer line 3')
+        performer.move({
+          start: { x: 168.597092, y: -302.402405, z: 0.0 },
+          end: { x: 225.553177, y: 1642.791626, z: 0.0 },
+          walkSpeed: 250,
+          inter: [],
+        })
+      }, 1000 * 22)
+    },
+
   },
 })
