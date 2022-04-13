@@ -35,6 +35,7 @@
         <button @click="toggleVehicle('hotAirBalloon')" >{{vehicle==='hotAirBalloon'?"退出热气球":"前往热气球"}}</button>
         <button @click="toggleBox('left')">{{isInBox?"离开左包厢":"前往左包厢"}}</button>
         <button @click="toggleBox('right')">{{isInBox?"离开右包厢":"前往右包厢"}}</button>
+        <button v-if="isInDisco" @click="moveCardinalDancer">开始表演</button>
       </template>
       <button @click="togglePhotoBooth" v-if="isInPhotoBooth">{{"退出拍照模式"}}</button>
       <template v-if="isInPhotoBooth">
