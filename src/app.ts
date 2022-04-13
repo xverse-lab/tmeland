@@ -12,6 +12,7 @@ import {
   IViewMode,
   ICurrentArea,
   IBossNames,
+  IPosition
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
@@ -25,7 +26,6 @@ const bossAvatarIdMap: Record<IBossNames, string> = {
 }
 const urlParam = new window.URLSearchParams(location.search)
 const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
-
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
   appId: appId,
@@ -214,6 +214,7 @@ new Vue({
       room.on('userAvatarLoaded', () => {
         if (!room.userAvatar) return
         console.log('Avatar 加载完毕')
+        this.initGuiders()
         // currentArea
         this.currentArea = room.userAvatar.currentArea
         this.avatarComponents = room.userAvatar.avatarComponents
@@ -643,7 +644,7 @@ new Vue({
         ? room.userAvatar.startChangeComponentsMode()
         : room.userAvatar.exitChangeComponentsMode()
     },
-
+    
     /**
      * @description dancer 的户型移动
      */
@@ -687,6 +688,133 @@ new Vue({
         })
       }, 1000 * 22)
     },
+    
 
+    initGuiders() {
+      console.log('initGuiders')
+      const userAvatar = room.userAvatar
+      if(!userAvatar) return
+      // 是否处于对话模式
+      let isInDialogueMode = false
+      // 对话模式下距离范围，进入时面对面
+      const DIALOGUE_RANGE = 500
+      // 可视距离范围，进入时添加npc
+      const IN_VIEW_RANGE = 1000
+      // 可视距离范围，超出时移除npc
+      const OUT_VIEW_RANGE = 2000
+      // 自定义的npc位置、形象等
+      const guiders = [
+        {
+          skinId: '10050',
+          userId: 'zhangsan1',
+          avatarId: 'KGe_Boy',
+          nickname: '新手引导员',
+          avatarPosition: { x: 0, y: 60700, z: 0 },
+          avatarRotation: { pitch: 0, yaw: 90, roll: 0 },
+        },
+        {
+          skinId: '10050',
+          userId: 'zhangsan2',
+          avatarId: 'KGe_Boy',
+          nickname: '热气球介绍员',
+          avatarPosition: { x: -28410, y: -32510, z: 0 },
+          avatarRotation: { pitch: 0, yaw: 100, roll: 0 },
+        },
+        {
+          skinId: '10050',
+          userId: 'zhangsan3',
+          avatarId: 'KGe_Boy',
+          nickname: '飞艇介绍员',
+          avatarPosition: { x: -500, y: -33100, z: 0 },
+          avatarRotation: { pitch: 0, yaw: 110, roll: 0 },
+        },
+        {
+          skinId: '10050',
+          userId: 'zhangsan4',
+          avatarId: 'KGe_Boy',
+          nickname: '游戏大厅介绍员',
+          avatarPosition: { x: 42000, y: 9500, z: 0 },
+          avatarRotation: { pitch: 0, yaw: 180, roll: 0 },
+        },
+      ]
+      // 更新npcs
+      const updateGuiders = () => {
+        const position = userAvatar?.position
+        if (!position) return
+        guiders.forEach((guider) => {
+          if (guider.skinId !== room.skinId || distance(position, guider.avatarPosition) > OUT_VIEW_RANGE) {
+            // 移除超出可视范围或者非当前皮肤的npc
+            room.avatarManager.removeAvatar(guider.userId, true)
+          } else if (guider.skinId === room.skinId && distance(position, guider.avatarPosition) < IN_VIEW_RANGE) {
+            // 如果用户进入可视范围，则添加该皮肤内的npc
+            room.avatarManager.addNpc({ ...guider }).then(() => {
+              console.log('addNpc', guider)
+            })
+          }
+        })
+      }
+
+      const distance = (point1: IPosition, point2: IPosition) => {
+        const x = point1.x - point2.x
+        const y = point1.y - point2.y
+        const z = point1.z - point2.z
+        return Math.sqrt(x * x + y * y + z * z)
+      }
+
+      const faceToFace = (dialogueNpc: Avatar, userAvatar: Avatar) => {
+        if (!dialogueNpc?.position || !userAvatar?.position) return
+        dialogueNpc?.faceTo({ point: { ...userAvatar.position, z: 0 } })
+        // 面对npc，并偏移30度，让用户看到npc的脸
+        userAvatar?.turnTo({ point: dialogueNpc.position, offset: 30 })
+      }
+
+      // 进房成功后初次添加npc
+      updateGuiders()
+
+      // 根据皮肤变化来动态更新npc，节省内存
+      room.on('skinChanged', updateGuiders)
+
+      // 点击NPC进入对话模式，用户Avatar走近并面朝NPC，同时画面聚焦到人物形象上
+      room.on('click', (event) => {
+        // 如果点击的不是Avatar
+        if (event?.target?.name !== ClickTargetName.Avatar) return
+        // 如果点击的不是这一批指引npc
+        if (!guiders.find((guider) => guider.userId === event.target?.id)) return
+        const avatar = room.avatars.find((avatar) => avatar.userId === event.target?.id)
+        if (!avatar?.position || !userAvatar?.position) return
+        isInDialogueMode = true
+        // 点击的npc与用户距离超过一定值，用户先前往附近后面对面，否则直接面对面
+        if (distance(avatar.position, userAvatar.position) < DIALOGUE_RANGE) {
+          faceToFace(avatar, userAvatar)
+          isInDialogueMode = false
+        } else {
+          userAvatar?.moveTo({ point: avatar.position })
+        }
+      })
+
+      userAvatar!.on('stopMoving', () => {
+        const position = userAvatar?.position
+        if (!position) return
+        updateGuiders()
+        if (!isInDialogueMode) return
+        // 正在对话的npc
+        const dialogueNpc = guiders.find((guider) => {
+          return guider.skinId === room.skinId && distance(guider.avatarPosition, position) < DIALOGUE_RANGE
+        })
+        if (!dialogueNpc) return
+        const avatar = room.avatars.find((avatar) => avatar.userId === dialogueNpc.userId)
+        if (!avatar) {
+          const { skinId, ...options } = dialogueNpc
+          room.avatarManager.addNpc(options).then((avatar) => {
+            faceToFace(avatar!, userAvatar!)
+            console.log('addNpc', options)
+            isInDialogueMode = false
+          })
+        } else {
+          faceToFace(avatar, userAvatar!)
+          isInDialogueMode = false
+        }
+      })
+    },
   },
 })
