@@ -15,7 +15,7 @@
     "vue-template-compiler": "^2.6.14"
   },
   "dependencies": {
-    "@xverse/tmeland": "^1.2.8",
+    "@xverse/tmeland": "^1.3.0-alpha.0",
     "vue": "^2.6.14"
   }
 }

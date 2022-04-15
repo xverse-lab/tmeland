@@ -12,7 +12,8 @@ import {
   IViewMode,
   ICurrentArea,
   IBossNames,
-  IPosition
+  IPosition,
+  Skins
 } from '@xverse/tmeland'
 import Minimap from './components/minimap/minimap.vue'
 import ComponentsPanel from './components/components-panel/components-panel.vue'
@@ -29,7 +30,7 @@ const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
   appId: appId,
-  releaseId: '2203091613_ca6e87'
+  releaseId: '2204141500_2ce45c'
 })
 let room: XverseRoom
 
@@ -94,7 +95,7 @@ new Vue({
       const roomId = urlParam.get('roomId') || 'e629ef3e-022d-4e64-8654-703bb96410eb'
       const userId = urlParam.get('userId') || this.userId
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
-      const skinId = (urlParam.get('skinId') || import.meta.env.VITE_SKINID) as string
+      const skinId = (urlParam.get('skinId') || Skins.AdDisco) as string
       this.avatarId = avatarId
       // 注意 1.1.5 更换了测试后台
       const wsServerUrl = urlParam.get('ws')
@@ -117,7 +118,7 @@ new Vue({
           userId,
           wsServerUrl: wsServerUrl,
           appId: appId,
-          token: ' ',
+          token: token,
           nickname: userId,
           firends: ['user1'],
           viewMode: viewMode,
@@ -126,6 +127,7 @@ new Vue({
         this.viewMode = viewMode
         this.bindUserAvatarEvent()
         this.bindConnectionEvent()
+        room.joyStick.init()
         ;(window as any).room = room
       } catch (error: any) {
         console.error(error)
