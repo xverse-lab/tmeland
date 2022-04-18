@@ -30,7 +30,7 @@ const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
   appId: appId,
-  releaseId: '2204141500_2ce45c'
+  releaseId: '2204181459_54e427'
 })
 let room: XverseRoom
 
@@ -127,7 +127,6 @@ new Vue({
         this.viewMode = viewMode
         this.bindUserAvatarEvent()
         this.bindConnectionEvent()
-        room.joyStick.init()
         ;(window as any).room = room
       } catch (error: any) {
         console.error(error)
@@ -145,32 +144,15 @@ new Vue({
         return
       }
 
-      // 观察者模式
-      // const viewMode: IViewMode = 'observer'
-      // console.log('进入' + viewMode + '模式')
-
-      // try {
-      //   // 预下载对应阶段的资源
-      //   await xverse.preload.start(viewMode, (progress: number, total: number) => {
-      //     console.log(progress, total)
-      //   })
-      //   room.setViewMode(viewMode)
-      //   this.viewMode = viewMode
-      // } catch (error: any) {
-      //   if (error.code === Codes.PreloadCanceled) {
-      //     toast('预加载被取消')
-      //     return
-      //   }
-      //   console.error(error)
-      //   return
-      // }
-
       // 禁止行走后自动转向面对镜头
       room.disableAutoTurn = true
-      // this.setSkytvVideo()
       this.setMV()
       this.bindClickEvent()
       this.getAvatarComponents()
+      room.joyStick.init()
+      if (skinId === Skins.AdDisco || skinId === Skins.Disco) {
+        this.afterDiscoAccessed()
+      }
     },
 
     /**
@@ -573,9 +555,61 @@ new Vue({
       }
     },
 
-    afterDiscoAccessed() {
-      room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
+    /**
+     * 迪厅进入后的处理
+     */
+    async afterDiscoAccessed() {
       this.isInDisco = !this.isInDisco
+      if(room.disco.skinId === Skins.AdDisco) {
+        // 阿迪 disco 添加走秀 NPC，位置朝向参考配置表
+        const npcAvatar2 = await room.avatarManager.addNpc({
+          userId: 'npc_ad_disco_model',
+          avatarId: 'Adidas_Model',
+          avatarPosition: { x: -273.129974, y: 2059.234375, z: 57.375923 },
+          avatarRotation: { pitch: 0, yaw: 270, roll: 0 },
+          avatarScale: 3,
+        })
+        // 这里临时调用这两行，后续修复后可去掉
+        npcAvatar2.setRayCast(false)
+        npcAvatar2.setPosition({ x: -273.129974, y: 2059.234375, z: 57.375923 })
+      } else {
+        room.disco.setConfessionsWallTexts(['2022新年快乐', '告白墙xxx', '2023新年快乐', '2024新年快乐'])
+      }
+    },
+
+    /**
+     * 阿迪走秀
+     */
+    async startCatwalks() {
+      const model = room.avatars.find((item) => item.userId === 'npc_ad_disco_model')
+      if(!model) return
+      model.setPosition({ x: -273.129974, y: 2059.234375, z: 57.375923 })
+      model.setRotation({ pitch: 0, yaw: -90, roll: 0 })
+      model.show()
+
+      console.log('start to move dancer line 1')
+      await model.move({
+        start: { x: -273.129974, y: 2059.234375, z: 57.375923 },
+        end: { x: -273.129974, y: -1370.197998, z: 57.375923 },
+        walkSpeed: 500,
+      })
+
+      console.log('start to move dancer line 2')
+      await model.moveHermite({
+        start: { x: -273.129974, y: -1370.197998, z: 57.375923 },
+        end: { x: 298.809143, y: -1370.197998, z: 57.375923 },
+        duration: 1000 * 10,
+        tension: 20,
+      })
+
+      console.log('start to move dancer line 3')
+      await model.move({
+        start: { x: 298.809143, y: -1370.197998, z: 57.375923 },
+        end: { x: 298.809143, y: 2059.234375, z: 57.375923 },
+        walkSpeed: 500,
+        inter: [],
+      })
+      model.hide()
     },
 
     /**
@@ -655,7 +689,7 @@ new Vue({
       // 自定义的npc位置、形象等
       const guiders = [
         {
-          skinId: '10050',
+          skinId: Skins.Island,
           userId: 'zhangsan1',
           avatarId: 'KGe_Boy',
           nickname: '新手引导员',
@@ -663,7 +697,7 @@ new Vue({
           avatarRotation: { pitch: 0, yaw: 90, roll: 0 },
         },
         {
-          skinId: '10050',
+          skinId: Skins.Island,
           userId: 'zhangsan2',
           avatarId: 'KGe_Boy',
           nickname: '热气球介绍员',
@@ -671,7 +705,7 @@ new Vue({
           avatarRotation: { pitch: 0, yaw: 100, roll: 0 },
         },
         {
-          skinId: '10050',
+          skinId: Skins.Island,
           userId: 'zhangsan3',
           avatarId: 'KGe_Boy',
           nickname: '飞艇介绍员',
@@ -679,7 +713,7 @@ new Vue({
           avatarRotation: { pitch: 0, yaw: 110, roll: 0 },
         },
         {
-          skinId: '10050',
+          skinId: Skins.Island,
           userId: 'zhangsan4',
           avatarId: 'KGe_Boy',
           nickname: '游戏大厅介绍员',

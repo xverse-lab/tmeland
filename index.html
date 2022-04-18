@@ -25,6 +25,7 @@
     <div class="function_control_btns" v-cloak v-if="viewMode == 'full'">
       <template v-if="!isInPhotoBooth">
         <button @click="startPlayRain">开启红包雨</button>
+        <button @click="startCatwalks">开始走秀</button>
         <button @click="toggleDisco">{{isInDisco?'离开迪厅':'前往迪厅'}}</button>
         <button @click="toggleLiveHall">{{isInLiveHall?'离开直播厅':'前往直播厅'}}</button>
         <button @click="toggleComponentsPanel">换装</button>
