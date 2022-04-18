@@ -315,7 +315,7 @@ new Vue({
           id: '1306793',
         },
         {
-          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/60745.png',
+          cover: '',
           id: '60745',
         },
         // {
