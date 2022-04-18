@@ -34,7 +34,7 @@ const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
   appId: appId,
-  releaseId: '2203301019_ce4b5d'
+  releaseId: '2204181118_b4d714'
 })
 let room: XverseRoom
 
@@ -189,6 +189,154 @@ new Vue({
     },
 
     async afterMusicianHallAccessed() {
+      const TOTAL_ALBUMS = [
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/1458791.png',
+          id: '1458791',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/8217.png',
+          id: '8217',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/8220.png',
+          id: '8220',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/8218.png',
+          id: '8218',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/60671.png',
+          id: '60671',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/20612.png',
+          id: '20612',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/8219.png',
+          id: '8219',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/13004.png',
+          id: '13004',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/7876962.png',
+          id: '7876962',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/33021.png',
+          id: '33021',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/36062.png',
+          id: '36062',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/852856.png',
+          id: '852856',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/194021.png',
+          id: '194021',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/56705.png',
+          id: '56705',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/9040723.png',
+          id: '9040723',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/85650.png',
+          id: '85650',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/14323.png',
+          id: '14323',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/12924001.png',
+          id: '12924001',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/32611.png',
+          id: '32611',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/1366240.png',
+          id: '1366240',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/4044657.png',
+          id: '4044657',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/3883404.png',
+          id: '3883404',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/8221.png',
+          id: '8221',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/33802.png',
+          id: '33802',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/60736.png',
+          id: '60736',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/14536.png',
+          id: '14536',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/67340.png',
+          id: '67340',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/14320.png',
+          id: '14320',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/9612009.png',
+          id: '9612009',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/453899.png',
+          id: '453899',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/1306793.png',
+          id: '1306793',
+        },
+        {
+          cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/60745.png',
+          id: '60745',
+        },
+        // {
+        //   cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/14311.png',
+        //   id: '14311',
+        // },
+        // {
+        //   cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/33749.png',
+        //   id: '33749',
+        // },
+        // {
+        //   cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/1268858.png',
+        //   id: '1268858',
+        // },
+        // {
+        //   cover: 'https://app-asset-1258211750.file.myqcloud.com/1/textures/14319.png',
+        //   id: '14319',
+        // },
+      ]
+
+      room.musicianHall.setAlbumsWallData(TOTAL_ALBUMS, 'https://app-asset-1258211750.file.myqcloud.com/3/textures/wecom-temp-71609c30e5a3afbe6438c1d05a4c3f44.jpg')
       const getComment = () => {
         const comment = {
           content: '欢迎来到音乐厅',
