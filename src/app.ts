@@ -67,6 +67,7 @@ new Vue({
       vehicle: '',
       clickVehicle: '',
       observerArea: '', // 观察者区域
+      isLiveShowing: false, // 是否在迪厅表演中
     }
   },
   mounted() {
@@ -610,6 +611,133 @@ new Vue({
         inter: [],
       })
       model.hide()
+    },
+
+    /**
+     * 阿迪表演
+     */
+    async toggleShow() {
+      const userId = 'Adidas_Live'
+
+      const playNpcAnimation = async (animationName: string, isLoop?: boolean) => {
+        const loop = isLoop || false
+        const npcAvatar = room.avatars.find((item) => item.userId === userId)
+        return npcAvatar?.playAnimation({ animationName, loop })
+      }
+
+      const startShowQueue = async () => {
+        await room.disco.showEffect({
+          name: '62d109b7eb3a187c',
+          scale: 3,
+          userId: 'Adidas_Live',
+        })
+        await room.disco.removeEffect('chuchang')
+        const AnimationAndEffectList = [
+          { animationName: 'Dance01_01', effectName: 'b99d6abc49435cf2', sleepDuration: 1000 },
+          { animationName: 'Dance01_02', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_03', effectName: '180adfdb68895693', sleepDuration: 1000 },
+          { animationName: 'Dance01_04', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_05', effectName: 'adb6bc525c141f7c', sleepDuration: 1000 },
+          { animationName: 'Dance01_06', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_07', effectName: '5c43bbb2d9e5cbb9', sleepDuration: 1000 },
+          { animationName: 'Dance01_08', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_09', effectName: 'b99d6abc49435cf2', sleepDuration: 1000 },
+          { animationName: 'Dance01_10', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_11', effectName: '180adfdb68895693', sleepDuration: 1000 },
+          { animationName: 'Dance01_12', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_13', effectName: 'adb6bc525c141f7c', sleepDuration: 1000 },
+          { animationName: 'Dance01_14', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_15', effectName: '5c43bbb2d9e5cbb9', sleepDuration: 1000 },
+          { animationName: 'Dance01_16', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_17', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_18', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_19', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance01_20', effectName: '', sleepDuration: 1000 },
+
+          { animationName: 'Dance06_01', effectName: 'b99d6abc49435cf2', sleepDuration: 1000 },
+          { animationName: 'Dance06_02', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_03', effectName: '180adfdb68895693', sleepDuration: 1000 },
+          { animationName: 'Dance06_04', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_05', effectName: 'adb6bc525c141f7c', sleepDuration: 1000 },
+          { animationName: 'Dance06_06', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_07', effectName: '5c43bbb2d9e5cbb9', sleepDuration: 1000 },
+          { animationName: 'Dance06_08', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_09', effectName: 'b99d6abc49435cf2', sleepDuration: 1000 },
+          { animationName: 'Dance06_10', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_11', effectName: '180adfdb68895693', sleepDuration: 1000 },
+          { animationName: 'Dance06_12', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_13', effectName: 'adb6bc525c141f7c', sleepDuration: 1000 },
+          { animationName: 'Dance06_14', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_15', effectName: '5c43bbb2d9e5cbb9', sleepDuration: 1000 },
+          { animationName: 'Dance06_16', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_17', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_18', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_19', effectName: '', sleepDuration: 1000 },
+          { animationName: 'Dance06_20', effectName: '', sleepDuration: 1000 },
+        ]
+        const index = 0
+        const genPromise = async (animationName: string, effectName: string, sleepDuration: number) => {
+          if (effectName) {
+            console.debug('start to play effect : ', effectName)
+            room.disco.showEffect(effectName)
+          } else {
+            await room.disco.clearEffects()
+          }
+          console.debug('start to play animation : ', animationName)
+          await playNpcAnimation(animationName, false)
+          //动作之间的停顿时长
+          if (sleepDuration > 0) {
+            // console.log('wait some time : ', sleepDuration)
+            // await sleep(sleepDuration)
+          }
+        }
+
+        const loop = async (index: number): Promise<any> => {
+          if (!this.isLiveShowing) {
+            return Promise.reject(new Error('Canceled'))
+          }
+          const item = AnimationAndEffectList[index]
+          if (!item) return Promise.resolve()
+          const promise = genPromise(item.animationName, item.effectName, item.sleepDuration)
+          await promise
+          index++
+          return loop(index)
+        }
+
+        await loop(index)
+        await room.disco.clearEffects()
+      }
+
+      if (this.isLiveShowing) {
+        // 停止表演
+        this.isLiveShowing = !this.isLiveShowing
+        playNpcAnimation('Idle', true)
+        room.disco.clearEffects()
+      } else {
+        // 开始表演
+        this.isLiveShowing = !this.isLiveShowing
+        try {
+        // room.avatarManager.avatars 同 room.avatars 引用相同
+        if(!room.avatarManager.avatars.has(userId)) {
+          const npcAvatar = await room.avatarManager.addNpc({
+            userId: userId,
+            avatarId: 'Adidas_Live',
+            avatarPosition: { x: 0, y: -750, z: 57 },
+            avatarRotation: { pitch: 0, yaw: -90, roll: 0 },
+            avatarScale: 3,
+          })
+          npcAvatar.setRayCast(false)
+          npcAvatar.setPosition({ x: 0, y: -750, z: 57 })
+        }
+
+
+          await startShowQueue()
+        } catch (error: any) {
+          if (error && error.message === 'Canceled') {
+            toast('表演取消')
+          }
+        }
+      }
     },
 
     /**
