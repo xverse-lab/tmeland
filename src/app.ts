@@ -30,7 +30,7 @@ const appId = (urlParam.get('appId') || import.meta.env.VITE_APPID) as string
 // 注意 1.1.2 更新了 appId 的传参位置
 const xverse = new Xverse({
   appId: appId,
-  releaseId: '2204181459_54e427'
+  releaseId: '2204221608_65dae9'
 })
 let room: XverseRoom
 
@@ -96,7 +96,7 @@ new Vue({
       const roomId = urlParam.get('roomId') || 'e629ef3e-022d-4e64-8654-703bb96410eb'
       const userId = urlParam.get('userId') || this.userId
       const avatarId = urlParam.get('avatarId') || 'KGe_Girl'
-      const skinId = (urlParam.get('skinId') || Skins.AdDisco) as string
+      const skinId = (urlParam.get('skinId') || Skins.Island) as string
       this.avatarId = avatarId
       // 注意 1.1.5 更换了测试后台
       const wsServerUrl = urlParam.get('ws')
@@ -129,6 +129,7 @@ new Vue({
         this.bindUserAvatarEvent()
         this.bindConnectionEvent()
         ;(window as any).room = room
+        
       } catch (error: any) {
         console.error(error)
         if (error && error.code) {
@@ -200,6 +201,7 @@ new Vue({
         if (!room.userAvatar) return
         console.log('Avatar 加载完毕')
         this.initGuiders()
+        room.setXiaoNiActived(true)
         // currentArea
         this.currentArea = room.userAvatar.currentArea
         this.avatarComponents = room.userAvatar.avatarComponents
