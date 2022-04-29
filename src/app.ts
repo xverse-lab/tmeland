@@ -101,7 +101,7 @@ new Vue({
       // 注意 1.1.5 更换了测试后台
       const wsServerUrl = urlParam.get('ws')
         ? decodeURIComponent(urlParam.get('ws')!)
-        : 'wss://uat-eks.xverse.cn/ws'
+        : import.meta.env.VITE_SERVER_URL
 
       const bossName = (urlParam.get('bossName') as IBossNames) || undefined
 
